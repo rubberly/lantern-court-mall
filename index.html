@@ -35,7 +35,23 @@ button:focus-visible,#card a:focus-visible{outline:3px solid var(--accent);outli
 #act{position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 60px);background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:15px;box-shadow:0 8px 22px rgb(217 87 43 / .35)}
 #act:disabled{background:var(--ink);opacity:.85;box-shadow:none;cursor:default}
 #act kbd{font:600 11px var(--body);background:rgb(255 255 255 / .25);border-radius:5px;padding:2px 6px;margin-left:8px}
-#dir{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 60px);left:max(12px,env(safe-area-inset-left,0px));width:min(300px,calc(100% - 24px));max-height:calc(100% - 140px);overflow:auto;box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;padding:14px;box-shadow:0 10px 30px rgb(31 27 46 / .18)}
+#searchBtn{font-weight:700;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+#clearBtn{font-weight:600}
+#search .lbl{display:block;font-family:var(--display);font-weight:700;font-size:16px;margin:0 0 8px}
+#searchInput{width:100%;box-sizing:border-box;font:15px var(--body);color:var(--ink);background:#fff;border:1.5px solid var(--panel-line);border-radius:12px;padding:11px 12px;outline:none}
+#searchInput:focus{border-color:var(--accent)}
+.ex{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.ex button{background:#f2e8da;border:0;border-radius:999px;padding:6px 10px;font-size:12px;color:var(--ink)}
+.ex button:hover{background:#eadbc6}
+#summary{margin:10px 2px 6px;color:var(--muted);font-size:12.5px}
+#results{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.res{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:2px 10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:8px}
+.res:hover{background:#f2e8da}
+.res b{font-weight:600}
+.res .pr{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums}
+.res small{grid-column:2 / 4;color:var(--muted);font-size:12px}
+div#search{width:min(380px,calc(100% - 24px))}
+#dir,#search{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 60px);left:max(12px,env(safe-area-inset-left,0px));width:min(300px,calc(100% - 24px));max-height:calc(100% - 140px);overflow:auto;box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;padding:14px;box-shadow:0 10px 30px rgb(31 27 46 / .18)}
 #dir h3{margin:6px 0 4px;font-family:var(--display);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 #dir ul{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:2px}
 .go{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:7px 8px}
@@ -63,14 +79,23 @@ button:focus-visible,#card a:focus-visible{outline:3px solid var(--accent);outli
 
 <div class="hud" id="top">
   <div class="chip brand">Lantern <span>Court</span></div>
+  <button class="chip" id="searchBtn" aria-expanded="false" aria-controls="search">Search</button>
+  <button class="chip" id="clearBtn" hidden>Clear search ×</button>
   <button class="chip" id="dirBtn" aria-expanded="false" aria-controls="dir">Directory</button>
   <div class="chip" id="level">Level 1</div>
   <div class="chip" id="where" hidden></div>
 </div>
 <canvas id="map" width="240" height="364" aria-hidden="true"></canvas>
 <div id="dir" hidden></div>
+<div id="search" hidden role="dialog" aria-label="Search the mall">
+  <label for="searchInput" class="lbl">What are you looking for?</label>
+  <input id="searchInput" type="search" placeholder="Try: gift for a 12-year-old who likes soccer" autocomplete="off" enterkeyhint="go">
+  <div class="ex" id="examples"></div>
+  <p id="summary" hidden></p>
+  <ul id="results"></ul>
+</div>
 <button id="act" hidden></button>
-<div class="hud chip" id="help">Drag to look · WASD or arrows to walk · Shift to hurry · Click a product · E for elevator</div>
+<div class="hud chip" id="help">Drag to look · WASD or arrows to walk · Shift to hurry · Click a product · E for elevator · / to search</div>
 <div id="tip" hidden></div>
 <div id="stick" hidden><div id="knob"></div></div>
 
@@ -362,6 +387,7 @@ STORES.forEach(st=>{
       mesh.userData={item:it,store:st,root:mesh}; clickables.push(mesh);
     }
     scene.add(mesh); spinners.push(mesh);
+    it.mesh = mesh; it.i = i; it.st = st; it.topY = y0+1.05+h;
     const tag = new THREE.Sprite(new THREE.SpriteMaterial({map:textTexture(fmt(it.p),'#1f1b2e','#ffffff',192,80,'700 50px Outfit, system-ui, sans-serif')}));
     tag.scale.set(.6,.25,1); tag.position.set(px,y0+1.05+h+.4,pz); scene.add(tag);
   });
@@ -433,9 +459,11 @@ function move(dx,dz){
 const keys = {};
 let curAction = null;
 addEventListener('keydown', e=>{
+  if(e.target.tagName==='INPUT') return;
   if(e.target.closest && e.target.closest('#card a,button')) return;
+  if(e.key==='/'){ e.preventDefault(); toggleSearch(true); return; }
   keys[e.code]=true;
-  if(e.code==='Escape'){ closeCard(); toggleDir(false); }
+  if(e.code==='Escape'){ closeCard(); toggleDir(false); toggleSearch(false); }
   if(e.code==='KeyE' && curAction) curAction.run();
 });
 addEventListener('keyup', e=>{ keys[e.code]=false; });
@@ -539,7 +567,7 @@ const dir = document.getElementById('dir'), dirBtn = document.getElementById('di
     li.appendChild(b); ul.appendChild(li);
   });
 });
-function toggleDir(v){ dir.hidden = !v; dirBtn.setAttribute('aria-expanded', String(v)); }
+function toggleDir(v){ dir.hidden = !v; dirBtn.setAttribute('aria-expanded', String(v)); if(v) toggleSearch(false); }
 dirBtn.addEventListener('click', ()=> toggleDir(dir.hidden));
 
 // ---------------- Elevator action button ----------------
@@ -573,6 +601,165 @@ function updateAction(){
   }
 }
 
+// ---------------- Search ----------------
+const KW = {
+ 'Sneaker Shop':'shoes sneakers footwear running sport athlete kid teen adult',
+ 'Tech Store':'tech electronics headphones audio music computer gadget teen adult gamer student',
+ 'Game Store':'games gaming gamer video console kid teen board family',
+ 'Book Nook':'books reading reader novel student adult teacher',
+ 'Toy Shop':'toys kid play lego building car fun',
+ 'Home Goods':'home cozy decor house mom grandma adult housewarming',
+ 'Phone Hub':'phone mobile tech gadget teen adult',
+ 'Sports Locker':'sports soccer basketball tennis ball athlete kid teen fitness outdoor',
+ 'Pet Pantry':'pets dog cat puppy kitten animal',
+ 'Candy Jar':'candy sweets chocolate treat snack stocking stuffer kid',
+ 'Music Box':'music musician instrument guitar piano drums band teen',
+ 'Kitchen Corner':'kitchen cooking cook chef baking mom dad adult housewarming',
+ 'Art Supply':'art artist drawing painting creative craft kid teen',
+ 'Outdoor Outfitters':'outdoors outdoor camping hiking nature adventure dad',
+ 'Beauty Bar':'beauty makeup skincare selfcare teen mom',
+ 'Watch & Jewelry':'jewelry watch wife girlfriend mom anniversary fancy',
+ 'Kids Closet':'kids clothes clothing kid child baby',
+ 'Party Store':'party birthday decorations celebration kid',
+ 'Denim Depot':'clothes clothing fashion jeans teen adult',
+ 'Hat Rack':'hats fashion clothing winter summer',
+ 'Backpack Base':'bags backpack school student travel teen',
+ 'Garden Center':'garden plants gardening grandma mom nature',
+ 'Camera Corner':'camera photography photo photographer creative',
+ 'Hobby Hangar':'hobby hobbies drone puzzle model chess dad kid teen brain',
+ 'Comic Vault':'comics manga superhero teen kid reader',
+ 'Bike Shop':'bikes bike cycling biking kid teen outdoor',
+ 'Office Supply':'office school student stationery work teacher',
+ 'Tea & Coffee':'coffee tea drinks dad mom coworker teacher',
+ 'Bath & Body':'bath spa selfcare relax mom grandma cozy',
+ 'Lamp & Light':'lights lighting lamp room decor teen cozy',
+ 'Card & Gift':'card birthday wrapping',
+ 'Fitness Gear':'fitness gym workout exercise yoga athlete',
+ 'Eyewear':'glasses sunglasses eyewear summer',
+ 'Travel Shop':'travel trip vacation traveler luggage',
+ 'Sunrise Bakery':'bakery food treat snack dessert',
+ 'Pixel Arcade':'arcade games gamer kid teen fun'
+};
+const ISYN = {earbuds:'headphones audio', headset:'headphones audio', speaker:'audio music bluetooth', keyboard:'computer typing',
+  watch:'smartwatch', plush:'stuffed animal', bear:'stuffed animal teddy', kite:'outdoor', tent:'camping', bricks:'lego',
+  controller:'gamepad', blanket:'cozy', candle:'cozy', mug:'coffee', necklace:'jewelry', ring:'jewelry', earrings:'jewelry',
+  helmet:'safety', puzzle:'brain', chess:'strategy brain', drone:'flying tech', guitar:'music', ukulele:'music', piano:'music',
+  basketball:'ball', soccer:'ball', lotion:'skincare', bombs:'spa', towel:'spa', jeans:'pants', beanie:'hat winter', cap:'hat',
+  croissant:'pastry', cupcake:'dessert', cookie:'dessert', fudge:'dessert', chocolate:'dessert'};
+const TOKSYN = {boy:'kid', girl:'kid', son:'kid', daughter:'kid', child:'kid', children:'kid', toddler:'kid', nephew:'kid', niece:'kid',
+  teenager:'teen', mother:'mom', mum:'mom', father:'dad', grandmother:'grandma', grandpa:'grandma', grandparent:'grandma',
+  grandfather:'grandma', headphone:'headphones', football:'soccer', sneaker:'sneakers', game:'games', gaming:'games'};
+const STOP = new Set('a an the for to of and or in on at with my me i we need want find get buy some something who that likes like loves love into is are it old year years yr yrs gift present good best nice cool idea ideas under below over above less more than up max min cheap around about him her them their his between price priced dollar dollars cost spend budget someone anyone person people shopping shop store looking ideas please'.split(' ').map(w=>w.length>3&&w.endsWith('s')&&!w.endsWith('ss')?w.slice(0,-1):w));
+const stem = w => w.length>3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0,-1) : w;
+const words = s => s.toLowerCase().replace(/[^a-z0-9 ]+/g,' ').split(/\s+/).filter(Boolean).map(stem);
+STORES.forEach(st=>{
+  st._name = words(st.name+' '+st.tag); st._kw = words(KW[st.name]||'');
+  st.items.forEach(it=>{ it._name = words(it.n); it._syn = words(it.n.toLowerCase().split(/\s+/).map(w=>ISYN[w]||'').join(' ')); });
+});
+const hit = (t, arr) => arr.some(w => w===t || (t.length>=4 && w.startsWith(t)) || (w.length>=4 && t.startsWith(w)));
+function parseQuery(q){
+  let s = q.toLowerCase().replace(/-/g,' ');
+  let min=0, max=Infinity, m;
+  if(m = s.match(/\$?\s*(\d+)\s*(?:to|and)\s*\$?\s*(\d+)/)){ min=+m[1]; max=+m[2]; }
+  else {
+    if(m = s.match(/(?:under|below|less than|up to|max|cheaper than|<)\s*\$?\s*(\d+)/)) max=+m[1];
+    if(m = s.match(/(?:over|above|more than|at least|min|>)\s*\$?\s*(\d+)/)) min=+m[1];
+    if(max===Infinity && min===0 && (m = s.match(/\$\s*(\d+)/))) max=+m[1];
+  }
+  const toks=[];
+  if(m = s.match(/(\d+)\s*(?:year|yr)/)){ const a=+m[1]; toks.push(a<=12?'kid':a<=19?'teen':'adult'); }
+  words(s.replace(/\$?\d+/g,' ')).forEach(w=>{ w = TOKSYN[w]||w; if(!STOP.has(w) && w.length>1) toks.push(stem(w)); });
+  return {toks:[...new Set(toks)], min, max};
+}
+function runSearch(q){
+  const {toks,min,max} = parseQuery(q);
+  let res=[];
+  STORES.forEach(st=>st.items.forEach(it=>{
+    if(it.p<min || it.p>max) return;
+    let sc=0;
+    for(const t of toks){
+      if(hit(t,it._name)||hit(t,it._syn)) sc+=3;
+      else if(hit(t,st._name)) sc+=2;
+      else if(hit(t,st._kw)) sc+=1;
+    }
+    if(toks.length ? sc>0 : (min>0||max<Infinity)) res.push({it,st,sc});
+  }));
+  res.sort((a,b)=>b.sc-a.sc || a.it.p-b.it.p);
+  if(res.length){ const cut=Math.ceil(res[0].sc/3); res=res.filter(r=>r.sc>=cut); }
+  return {res, toks, min, max};
+}
+
+const searchPanel = document.getElementById('search'), searchBtn = document.getElementById('searchBtn');
+const searchInput = document.getElementById('searchInput'), resultsEl = document.getElementById('results');
+const summaryEl = document.getElementById('summary'), clearBtn = document.getElementById('clearBtn');
+let matched = [], lastQuery = '';
+const EXAMPLES = ['Gift for a 12-year-old who likes soccer under $30','Headphones','Cozy gifts under $25','Something for a gamer','Gifts for mom under $20','Stocking stuffers under $10'];
+const exEl = document.getElementById('examples');
+EXAMPLES.forEach(x=>{ const b=document.createElement('button'); b.textContent=x; b.addEventListener('click',()=>{ searchInput.value=x; doSearch(x); }); exEl.appendChild(b); });
+function toggleSearch(v){
+  searchPanel.hidden = !v; searchBtn.setAttribute('aria-expanded', String(v));
+  if(v){ dir.hidden=true; dirBtn.setAttribute('aria-expanded','false'); closeCard(); setTimeout(()=>{ try{ searchInput.focus(); searchInput.select(); }catch(_){} },0); }
+}
+searchBtn.addEventListener('click', ()=> toggleSearch(searchPanel.hidden));
+clearBtn.addEventListener('click', ()=>{ clearSearch(); canvas.focus(); });
+function clearSearch(){ searchInput.value=''; doSearch(''); }
+let debounce=0;
+searchInput.addEventListener('input', ()=>{ clearTimeout(debounce); debounce=setTimeout(()=>doSearch(searchInput.value),140); });
+searchInput.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ e.preventDefault(); doSearch(searchInput.value); if(matched.length) goTo(matched[0]); }
+  if(e.key==='Escape'){ toggleSearch(false); canvas.focus(); }
+});
+function doSearch(q){
+  q = q.trim(); lastQuery = q;
+  resultsEl.innerHTML=''; matched=[];
+  if(!q){ summaryEl.hidden=true; clearBtn.hidden=true; searchBtn.textContent='Search'; return []; }
+  const {res,min,max} = runSearch(q);
+  matched = res.slice(0,12).map(r=>r.it);
+  const shops = new Set(res.map(r=>r.st.name)).size;
+  let price = '';
+  if(min>0 && max<Infinity) price=' between $'+min+' and $'+max; else if(max<Infinity) price=' under $'+max; else if(min>0) price=' over $'+min;
+  summaryEl.hidden=false;
+  summaryEl.textContent = res.length ? res.length+' match'+(res.length>1?'es':'')+price+' in '+shops+' shop'+(shops>1?'s':'')+'. Glowing items have arrows over them.'
+    : 'Nothing matched'+price+'. Try a thing (headphones), a person (mom, a 10-year-old) or an interest (soccer, cooking).';
+  res.slice(0,30).forEach(r=>{
+    const li=document.createElement('li'); const b=document.createElement('button'); b.className='res';
+    b.innerHTML='<span class="sw"></span><b></b><span class="pr"></span><small></small>';
+    b.children[0].style.background=r.st.color; b.children[1].textContent=r.it.n; b.children[2].textContent=fmt(r.it.p);
+    b.children[3].textContent=r.st.name+' · Level '+(r.st.level+1);
+    b.addEventListener('click',()=>goTo(r.it));
+    li.appendChild(b); resultsEl.appendChild(li);
+  });
+  clearBtn.hidden = false;
+  searchBtn.textContent = 'Search: '+(q.length>18?q.slice(0,17)+'…':q);
+  return res;
+}
+const SPOTS = [[-2.8,4.5],[2.8,4.5],[-2.8,9],[2.8,9]];
+function goTo(it){
+  const st=it.st, [u,v]=SPOTS[it.i], [x,z]=L(st,u*.6,v-3.7);
+  player.x=x; player.z=z; player.y=st.level*FH; player.vy=0;
+  player.yaw=Math.atan2(-st.nx,-st.nz) + Math.atan2(u*.4,3.7); player.pitch=-0.12;
+  toggleSearch(false); toggleDir(false); openCard(it, st); canvas.focus();
+}
+// highlight markers
+const markerMat = new THREE.MeshBasicMaterial({color:0xd9572b});
+const markers = [];
+for(let i=0;i<12;i++){ const m=new THREE.Mesh(new THREE.ConeGeometry(.22,.45,14), markerMat); m.rotation.x=Math.PI; m.visible=false; scene.add(m); markers.push(m); }
+const glowCol = new THREE.Color();
+let glowing = new Set();
+function updateSearchFx(t){
+  const k = .5+.5*Math.sin(t*4);
+  const now = new Set(matched);
+  glowing.forEach(it=>{ if(!now.has(it)) (it.mesh.isGroup?it.mesh.children:[it.mesh]).forEach(m=>m.material.emissive.setHex(0)); });
+  glowCol.setRGB(.55*k,.3*k,.05*k);
+  matched.forEach(it=>{ if(hovered!==it.mesh) (it.mesh.isGroup?it.mesh.children:[it.mesh]).forEach(m=>m.material.emissive.copy(glowCol)); });
+  glowing = now;
+  markers.forEach((m,i)=>{
+    const it = matched[i];
+    if(!it){ m.visible=false; return; }
+    m.visible=true; m.position.set(it.mesh.position.x, it.topY+.95+Math.sin(t*3+i)*.12, it.mesh.position.z);
+  });
+}
+
 // ---------------- Minimap ----------------
 const map = document.getElementById('map'), mg = map.getContext('2d');
 function drawMap(){
@@ -592,6 +779,11 @@ function drawMap(){
     const x0=Math.min(a[0],b[0]), x1=Math.max(a[0],b[0]), z0=Math.min(a[1],b[1]), z1=Math.max(a[1],b[1]);
     mg.fillStyle = st.color+'40'; mg.fillRect(X(x0),Z(z0),(x1-x0)*s,(z1-z0)*s);
     mg.strokeStyle = st.color; mg.lineWidth=1.5; mg.strokeRect(X(x0)+1,Z(z0)+1,(x1-x0)*s-2,(z1-z0)*s-2);
+  });
+  matched.forEach(it=>{
+    const mx=X(it.mesh.position.x), mz=Z(it.mesh.position.z);
+    mg.beginPath(); mg.arc(mx,mz,4,0,7);
+    if(it.st.level===lv){ mg.fillStyle='#d9572b'; mg.fill(); } else { mg.strokeStyle='#d9572b'; mg.lineWidth=1.5; mg.stroke(); }
   });
   const px=X(player.x), pz=Z(player.z);
   const fx=-Math.sin(player.yaw), fz=-Math.cos(player.yaw), an=Math.atan2(fz,fx);
@@ -653,12 +845,15 @@ function step(dt){
 function frame(now){
   const dt = Math.min(.05,(now-last)/1000); last=now;
   step(dt);
+  updateSearchFx(t);
   renderer.render(scene,camera);
   drawMap(); updateWhere(); updateAction();
   requestAnimationFrame(frame);
 }
 // test hook: lets an automated check drive the player and render a frame
-window.__mall = {player, ELEV, keys, sendElev, step, render:()=>{ renderer.render(scene,camera); drawMap(); updateWhere(); updateAction(); }};
+window.__mall = {player, ELEV, keys, sendElev, step, doSearch, goTo, toggleSearch,
+  search:q=>runSearch(q).res.map(r=>r.it.n+' $'+r.it.p+' ('+r.st.name+', '+r.sc+')'),
+  render:()=>{ updateSearchFx(t); renderer.render(scene,camera); drawMap(); updateWhere(); updateAction(); }};
 document.getElementById('loading').hidden = true;
 canvas.style.cursor='grab';
 requestAnimationFrame(frame);
