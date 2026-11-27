@@ -104,7 +104,6 @@ body.coaching #sbar{z-index:12}
 #walking{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 60px);display:flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border-radius:999px;padding:6px 6px 6px 18px;box-shadow:0 10px 26px rgb(28 29 34 / .3);max-width:calc(100% - 24px);box-sizing:border-box}
 #walkTxt{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #walking button{flex:none;border:0;border-radius:999px;padding:9px 14px;font-weight:700;font-size:13px;background:rgb(255 255 255 / .15);color:#fff}
-#walking #skipWalk{background:var(--accent)}
 @media (prefers-reduced-motion: reduce){ .arrows svg{animation:none} }
 #loading{position:fixed;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--ink);z-index:30;background:var(--ground)}
 #stick{position:fixed;z-index:4;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgb(255 255 255 / .35);border:2px solid rgb(255 255 255 / .85);pointer-events:none}
@@ -137,7 +136,6 @@ body.coaching #sbar{z-index:12}
   <button type="submit" id="goBtn">Search</button>
 </form>
 <div id="search" hidden>
-  <div class="mode" role="group" aria-label="How to get there"><span>Get there by</span><button type="button" data-mode="walk">Walking me there</button><button type="button" data-mode="jump">Jumping there</button></div>
   <h4>Try one of these</h4>
   <div class="ex" id="examples"></div>
   <p id="summary" hidden></p>
@@ -151,7 +149,7 @@ body.coaching #sbar{z-index:12}
   <div class="chip" id="where" hidden></div>
 </div>
 <canvas id="map" width="240" height="364" aria-hidden="true"></canvas>
-<div id="dir" hidden><div class="mode" role="group" aria-label="How to get there"><span>Get there by</span><button type="button" data-mode="walk">Walking</button><button type="button" data-mode="jump">Jumping</button></div></div>
+<div id="dir" hidden></div>
 <div id="actions"></div>
 <div id="toast" hidden></div>
 <div class="chip" id="help">Drag to look · WASD or arrows to walk · Shift to hurry · Click a product · / to search</div>
@@ -177,17 +175,15 @@ body.coaching #sbar{z-index:12}
   <div class="bubble">
     <div class="eyebrow">Welcome to Lantern Court</div>
     <h1 id="cTitle">Start up here</h1>
-    <p>The bar at the top gets you anywhere in 55 shops on 3 levels. What would you like to do?</p>
+    <p>Search the bar at the top for anything in 55 shops on 3 levels, and we’ll walk you right to it. Or explore on your own.</p>
     <div class="choices">
-      <button class="big" id="cSearch">Search<small>Find a gift or product</small></button>
-      <button class="big alt" id="cTravel">Travel<small>Go straight to a shop</small></button>
+      <button class="big" id="cSearch">Fast travel<small>Search, then we walk you there</small></button>
+      <button class="big alt" id="cExplore">Just look around<small>Explore at your own pace</small></button>
     </div>
-    <button class="link" id="cExplore">Just look around</button>
   </div>
 </div>
 <div id="walking" hidden>
   <span id="walkTxt"></span>
-  <button id="skipWalk">Skip ahead</button>
   <button id="stopWalk">Stop</button>
 </div>
 
@@ -1136,23 +1132,17 @@ const coach = document.getElementById('coach');
 function closeCoach(){ if(coach.hidden) return; coach.hidden=true; document.body.classList.remove('coaching'); }
 coach.hidden=false; document.body.classList.add('coaching');
 document.getElementById('cSearch').addEventListener('click', ()=>{ closeCoach(); searchInput.focus(); });
-document.getElementById('cTravel').addEventListener('click', ()=>{ closeCoach(); toggleDir(true); });
 document.getElementById('cExplore').addEventListener('click', ()=>{ closeCoach(); canvas.focus(); showToast(coarse?'Left thumb to walk · drag to look around':'WASD or arrow keys to walk · drag to look around'); });
 
-// ================= Travel: walk me there or jump there =================
-let travelMode = 'walk';
-try{ const m=localStorage.getItem('lc.travel'); if(m==='walk'||m==='jump') travelMode=m; }catch(_){}
-const modeBtns = document.querySelectorAll('.mode button');
-function setMode(m){ travelMode=m; modeBtns.forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.mode===m))); try{ localStorage.setItem('lc.travel',m); }catch(_){} }
-modeBtns.forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
-setMode(travelMode);
+// ================= Fast travel: always an animated walk =================
+// (jumpToShop / goTo only set the final pose once the walk has arrived)
 function jumpToShop(st){
   player.x = st.fx - st.nx*3; player.z = st.fz - st.nz*3; player.y = st.level*FH; player.vy=0;
   player.yaw = Math.atan2(-st.nx,-st.nz); player.pitch=-0.05;
   toggleDir(false); closeCard(); showDrop(false); canvas.focus(); showToast('You’re at '+st.name);
 }
-function travelToItem(it){ if(travelMode==='jump') return goTo(it); walkTo(it.st, it, ()=>goTo(it)); }
-function travelToShop(st){ if(travelMode==='jump') return jumpToShop(st); walkTo(st, null, ()=>jumpToShop(st)); }
+function travelToItem(it){ walkTo(it.st, it, ()=>goTo(it)); }
+function travelToShop(st){ walkTo(st, null, ()=>jumpToShop(st)); }
 
 // Walking routes: a loop "lane" on each level, joined by the stairs (garden centre <-> main landings <-> upper stair tops)
 const LANE = [{hx:13,hz:32},{hx:12,hz:32},{hx:12,hz:32}];
@@ -1241,7 +1231,6 @@ function walkTo(st, it, done){
 }
 function stopAuto(){ auto=null; walkEl.hidden=true; actionsEl.hidden=false; player.vy=0; }
 function finishAuto(){ const d=auto.done; stopAuto(); d(); }
-document.getElementById('skipWalk').addEventListener('click', ()=>{ if(auto) finishAuto(); });
 document.getElementById('stopWalk').addEventListener('click', ()=>{ stopAuto(); canvas.focus(); });
 function yOn(type, A, z){
   if(type==='s01') return Math.max(0,Math.min(FH,(Math.abs(z)-2)/2));
@@ -1249,7 +1238,7 @@ function yOn(type, A, z){
   return A.lv*FH;
 }
 function stepAuto(dt){
-  let rem = 6*dt;
+  let rem = 9*dt;
   while(auto){
     const A=auto.pts[auto.seg], B=auto.pts[auto.seg+1];
     if(!B){ finishAuto(); return; }
@@ -1317,7 +1306,7 @@ function frame(now){
 }
 if(reduceMotion) updatePeople(0,0);
 // test hook: lets an automated check drive the player and render a frame
-window.__mall = {player, ELEV, keys, sendElev, step, doSearch, goTo, STORES, closeCoach, travelToItem, travelToShop, setMode, getAuto:()=>auto,
+window.__mall = {player, ELEV, keys, sendElev, step, doSearch, goTo, STORES, closeCoach, travelToItem, travelToShop, getAuto:()=>auto,
   wouldBlock:(x,z,y)=>{ const oy=player.y; player.y=y; const b=blocked(x,z); player.y=oy; return b; },
   search:q=>runSearch(q).res.map(r=>r.it.n+' $'+r.it.p+' ('+r.st.name+', '+r.sc+')'),
   render:()=>{ updateSearchFx(t); renderer.render(scene,camera); drawMap(); updateWhere(); updateAction(); }};
