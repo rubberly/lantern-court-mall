@@ -105,6 +105,20 @@ body.coaching #sbar{z-index:12}
 #walkTxt{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 #walking button{flex:none;border:0;border-radius:999px;padding:9px 14px;font-weight:700;font-size:13px;background:rgb(255 255 255 / .15);color:#fff}
 @media (prefers-reduced-motion: reduce){ .arrows svg{animation:none} }
+/* chase game */
+#gameDot{position:fixed;z-index:6;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);display:flex;align-items:center;gap:6px;border:0;background:rgb(255 255 255 / .75);border-radius:999px;padding:5px 10px 5px 8px;font:600 11px var(--body);color:var(--muted);letter-spacing:.04em;box-shadow:0 2px 8px rgb(28 29 34 / .12)}
+#gameDot i{width:9px;height:9px;border-radius:50%;background:#d62828;box-shadow:0 0 0 3px rgb(214 40 40 / .18)}
+#gameDot:hover{color:var(--ink)}
+#danger{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;box-shadow:inset 0 0 140px 40px rgb(214 40 40 / .75);transition:opacity .2s}
+#chaseHud{position:fixed;z-index:9;top:calc(env(safe-area-inset-top,0px) + 74px);left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;background:#1c1d22;color:#fff;border-radius:18px;padding:10px 10px 10px 18px;box-shadow:0 12px 30px rgb(0 0 0 / .3);max-width:calc(100% - 24px);box-sizing:border-box}
+#chaseHud div{display:grid;gap:2px;min-width:0}
+#hudMain{font:800 18px var(--display);font-variant-numeric:tabular-nums;white-space:nowrap}
+#hudSub{font-size:12.5px;color:rgb(255 255 255 / .7);white-space:nowrap}
+#giveUp{flex:none;border:0;border-radius:12px;background:rgb(255 255 255 / .14);color:#fff;font-weight:700;padding:9px 12px}
+#gameOver{position:fixed;inset:0;z-index:13;background:rgb(20 21 26 / .5)}
+#gameOver .bubble{top:50%;transform:translate(-50%,-50%)}
+@media (max-width:1000px){ #chaseHud{top:calc(env(safe-area-inset-top,0px) + 120px)} }
+@media (max-width:620px){ #gameDot{bottom:calc(env(safe-area-inset-bottom,0px) + 70px)} }
 #loading{position:fixed;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--ink);z-index:30;background:var(--ground)}
 #stick{position:fixed;z-index:4;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgb(255 255 255 / .35);border:2px solid rgb(255 255 255 / .85);pointer-events:none}
 #knob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;box-shadow:0 3px 10px rgb(0 0 0 / .2)}
@@ -179,6 +193,20 @@ body.coaching #sbar{z-index:12}
     <div class="choices">
       <button class="big" id="cSearch">Fast travel<small>Search, then we walk you there</small></button>
       <button class="big alt" id="cExplore">Just look around<small>Explore at your own pace</small></button>
+    </div>
+  </div>
+</div>
+<button id="gameDot" aria-label="Play the chase game"><i></i>game</button>
+<div id="danger" aria-hidden="true"></div>
+<div id="chaseHud" hidden><div><b id="hudMain"></b><span id="hudSub"></span></div><button id="giveUp">Give up</button></div>
+<div id="gameOver" hidden role="dialog" aria-labelledby="ovTitle">
+  <div class="bubble ov">
+    <div class="eyebrow">Chase over</div>
+    <h1 id="ovTitle">Caught!</h1>
+    <p>You lasted <b><span id="ovTime">0</span> seconds</b>.<br><span id="ovBest"></span></p>
+    <div class="choices">
+      <button class="big" id="againBtn">Play again<small>Another 10 second head start</small></button>
+      <button class="big alt" id="leaveBtn">Back to the mall<small>Shopping, no chasing</small></button>
     </div>
   </div>
 </div>
@@ -1182,6 +1210,10 @@ function drawMap(){
     mg.beginPath(); mg.arc(mx,mz,4,0,7);
     if(it.st.level===lv){ mg.fillStyle='#e4572e'; mg.fill(); } else { mg.strokeStyle='#e4572e'; mg.lineWidth=1.5; mg.stroke(); }
   });
+  if(chase.on){
+    mg.beginPath(); mg.arc(X(chase.x),Z(chase.z),6,0,7);
+    if(Math.round(chase.y/FH)===lv){ mg.fillStyle='#d62828'; mg.fill(); } else { mg.strokeStyle='#d62828'; mg.lineWidth=2; mg.stroke(); }
+  }
   const px=X(player.x), pz=Z(player.z);
   const fx=-Math.sin(player.yaw), fz=-Math.cos(player.yaw), an=Math.atan2(fz,fx);
   mg.fillStyle='rgba(228,87,46,.3)'; mg.beginPath(); mg.moveTo(px,pz); mg.arc(px,pz,22,an-.5,an+.5); mg.closePath(); mg.fill();
@@ -1220,8 +1252,8 @@ function jumpToShop(st){
   player.yaw = Math.atan2(-st.nx,-st.nz); player.pitch=-0.05;
   toggleDir(false); closeCard(); showDrop(false); canvas.focus(); showToast('You’re at '+st.name);
 }
-function travelToItem(it){ walkTo(it.st, it, ()=>goTo(it)); }
-function travelToShop(st){ walkTo(st, null, ()=>jumpToShop(st)); }
+function travelToItem(it){ if(chase.on){ showDrop(false); searchInput.blur(); showToast('No fast travel during the chase. Run!'); return; } walkTo(it.st, it, ()=>goTo(it)); }
+function travelToShop(st){ if(chase.on){ toggleDir(false); showToast('No fast travel during the chase. Run!'); return; } walkTo(st, null, ()=>jumpToShop(st)); }
 
 // Walking routes: a loop "lane" on each level, joined by the stairs (garden centre <-> main landings <-> upper stair tops)
 const LANE = [{hx:13,hz:32},{hx:12,hz:32},{hx:12,hz:32}];
@@ -1238,64 +1270,80 @@ function snapLane(lv,x,z){
   return [cx,cz];
 }
 function lanePtFor(st){ const {hx,hz}=LANE[st.level]; return st.nx!==0 ? [st.nx*hx, st.fz] : [st.fx, st.nz*hz]; }
-function buildRoute(st, it){
-  const nodes=[], adj=[], lane=[[],[],[]];
-  const add=(x,z,lv)=>{ nodes.push({x,z,lv}); adj.push([]); return nodes.length-1; };
-  const link=(a,b,type)=>{ const A=nodes[a],B=nodes[b], d=Math.hypot(A.x-B.x,A.z-B.z)+(type==='f'?0:15); adj[a].push({to:b,d,type}); adj[b].push({to:a,d,type}); };
-  const laneNode=(lv,x,z)=>{ const i=add(x,z,lv); lane[lv].push(i); return i; };
-  for(let lv=0;lv<NLV;lv++){ const {hx,hz}=LANE[lv]; laneNode(lv,-hx,-hz); laneNode(lv,hx,-hz); laneNode(lv,hx,hz); laneNode(lv,-hx,hz); }
-  const G=add(0,0,0), NL=add(0,15,1), SL=add(0,-15,1), NT=add(0,29.5,2), ST=add(0,-29.5,2);
-  link(G,NL,'s01'); link(G,SL,'s01'); link(NL,NT,'s12'); link(SL,ST,'s12');
-  [1,-1].forEach(sx=>{ const a=add(5*sx,0,0), b=add(5*sx,4.5,0); link(G,a,'f'); link(a,b,'f'); link(b,laneNode(0,13*sx,4.5),'f'); });
-  [NL,SL].forEach(n=>[1,-1].forEach(sx=>link(n,laneNode(1,12*sx,nodes[n].z),'f')));
-  link(NT,laneNode(2,0,32),'f'); link(ST,laneNode(2,0,-32),'f');
-  // destination: lane -> just outside the door -> (in front of the product)
-  const [lx,lz]=lanePtFor(st), LP=laneNode(st.level,lx,lz);
-  const [ddx,ddz]=L(st,0,it?(st.food?-3.5:-1.2):-3), D=add(ddx,ddz,st.level); link(LP,D,'f');
-  let END=D;
-  if(it){
-    const [mx,mz]=L(st,0,it.v-3.2), Mid=add(mx,mz,st.level), [tx,tz]=L(st,it.u*.5,it.v-3.2), T=add(tx,tz,st.level);
-    link(D,Mid,'f'); link(Mid,T,'f'); END=T;
-  }
-  // start: from wherever the player is onto the network
-  const lv=lvl(), x=player.x, z=player.z, y=player.y, P=add(x,z,lv);
-  let here=null;
-  for(const s of STORES){ if(s.level!==lv) continue; const ex=x-s.fx, ez=z-s.fz, v=ex*s.nx+ez*s.nz, u=ex*s.tx+ez*s.tz; if(v>0 && v<(s.depth||14) && Math.abs(u)<s.hw){ here=s; break; } }
+// base walking network: a lane loop per level, joined by the stairs
+function baseGraph(){
+  const nodes=[], adj=[], lane=[[],[],[]], g={nodes,adj,lane};
+  g.add=(x,z,lv)=>{ nodes.push({x,z,lv}); adj.push([]); return nodes.length-1; };
+  g.link=(a,b,type)=>{ const A=nodes[a],B=nodes[b], d=Math.hypot(A.x-B.x,A.z-B.z)+(type==='f'?0:15); adj[a].push({to:b,d,type}); adj[b].push({to:a,d,type}); };
+  g.laneNode=(lv,x,z)=>{ const i=g.add(x,z,lv); lane[lv].push(i); return i; };
+  for(let lv=0;lv<NLV;lv++){ const {hx,hz}=LANE[lv]; g.laneNode(lv,-hx,-hz); g.laneNode(lv,hx,-hz); g.laneNode(lv,hx,hz); g.laneNode(lv,-hx,hz); }
+  g.G=g.add(0,0,0); g.NL=g.add(0,15,1); g.SL=g.add(0,-15,1); g.NT=g.add(0,29.5,2); g.ST=g.add(0,-29.5,2);
+  g.link(g.G,g.NL,'s01'); g.link(g.G,g.SL,'s01'); g.link(g.NL,g.NT,'s12'); g.link(g.SL,g.ST,'s12');
+  [1,-1].forEach(sx=>{ const a=g.add(5*sx,0,0), b=g.add(5*sx,4.5,0); g.link(g.G,a,'f'); g.link(a,b,'f'); g.link(b,g.laneNode(0,13*sx,4.5),'f'); });
+  [g.NL,g.SL].forEach(n=>[1,-1].forEach(sx=>g.link(n,g.laneNode(1,12*sx,nodes[n].z),'f')));
+  g.link(g.NT,g.laneNode(2,0,32),'f'); g.link(g.ST,g.laneNode(2,0,-32),'f');
+  return g;
+}
+function shopAt(x,z,lv){
+  for(const s of STORES){ if(s.level!==lv) continue; const ex=x-s.fx, ez=z-s.fz, v=ex*s.nx+ez*s.nz, u=ex*s.tx+ez*s.tz; if(v>0 && v<(s.depth||14) && Math.abs(u)<s.hw) return s; }
+  return null;
+}
+// connect any position (player or chaser) onto the network; returns its node
+function attach(g,x,z,y){
+  const lv=Math.max(0,Math.min(NLV-1,Math.round(y/FH))), P=g.add(x,z,lv), here=shopAt(x,z,lv);
   if(Math.abs(y-lv*FH)>.05 && Math.abs(x)<3.2){
-    if(y<FH) link(P, y<3?G:(z>0?NL:SL), 's01'); else link(P, y<9?(z>0?NL:SL):(z>0?NT:ST), 's12');
+    // mid-stair: connect to both ends so the planner can keep going the right way
+    if(y<FH){ g.link(P,g.G,'s01'); g.link(P,z>0?g.NL:g.SL,'s01'); }
+    else { g.link(P,z>0?g.NL:g.SL,'s12'); g.link(P,z>0?g.NT:g.ST,'s12'); }
   } else if(here){
-    if(here===st) link(P,END,'f');
-    const [ax,az]=L(here,0,1), [bx,bz]=L(here,0,-1.2), A=add(ax,az,lv), B=add(bx,bz,lv), [hx2,hz2]=lanePtFor(here);
-    link(P,A,'f'); link(A,B,'f'); link(B,laneNode(lv,hx2,hz2),'f');
+    const [ax,az]=L(here,0,here.food?.4:1), [bx,bz]=L(here,0,-1.2), A=g.add(ax,az,lv), B=g.add(bx,bz,lv), [hx2,hz2]=lanePtFor(here);
+    g.link(P,A,'f'); g.link(A,B,'f'); g.link(B,g.laneNode(lv,hx2,hz2),'f');
   } else if(ELEV.some(e=>inCab(e,x,z))){
-    const sx=Math.sign(x)||1, Q=add(sx*11.6,0,lv), [qx,qz]=snapLane(lv,sx*11.6,0); link(P,Q,'f'); link(Q,laneNode(lv,qx,qz),'f');
+    const sx=Math.sign(x)||1, Q=g.add(sx*11.6,0,lv), [qx,qz]=snapLane(lv,sx*11.6,0); g.link(P,Q,'f'); g.link(Q,g.laneNode(lv,qx,qz),'f');
   } else if(lv===1 && inAtrium(x,z)){
     const sx=Math.sign(x)||1, z1=Math.abs(z)<2.4?3*(Math.sign(z)||1):z;
-    const Q1=add(sx*5,z,1), Q2=add(sx*5,z1,1); link(P,Q1,'f'); link(Q1,Q2,'f'); link(Q2,laneNode(1,12*sx,z1),'f');
-    if(Math.abs(z)>=13.6 && Math.abs(z)<=16.4 && Math.abs(x)<3.2) link(P, z>0?NL:SL, 'f');
+    const Q1=g.add(sx*5,z,1), Q2=g.add(sx*5,z1,1); g.link(P,Q1,'f'); g.link(Q1,Q2,'f'); g.link(Q2,g.laneNode(1,12*sx,z1),'f');
+    if(Math.abs(z)>=13.6 && Math.abs(z)<=16.4 && Math.abs(x)<3.2) g.link(P, z>0?g.NL:g.SL, 'f');
   } else if(lv===0 && Math.abs(x)<7 && Math.abs(z)<5){
-    link(P,G,'f');
+    g.link(P,g.G,'f');
   } else {
-    const [qx,qz]=snapLane(lv,x,z); link(P,laneNode(lv,qx,qz),'f');
+    const [qx,qz]=snapLane(lv,x,z); g.link(P,g.laneNode(lv,qx,qz),'f');
   }
+  g.here=here; return P;
+}
+function shortest(g,S,E){
+  const {nodes,adj,lane}=g;
   for(let k=0;k<NLV;k++){
     const arr=lane[k].map(i=>({i,s:perimS(k,nodes[i].x,nodes[i].z)})).sort((a,b)=>a.s-b.s);
-    for(let j=0;j<arr.length;j++){ const a=arr[j], b=arr[(j+1)%arr.length]; if(a.i!==b.i) link(a.i,b.i,'f'); }
+    for(let j=0;j<arr.length;j++){ const a=arr[j], b=arr[(j+1)%arr.length]; if(a.i!==b.i) g.link(a.i,b.i,'f'); }
   }
-  // shortest path (Dijkstra; the graph is tiny)
   const dist=nodes.map(()=>Infinity), prev=nodes.map(()=>-1), ptype=[], done=nodes.map(()=>false);
-  dist[P]=0;
+  dist[S]=0;
   for(;;){
     let u=-1, best=Infinity;
     for(let i=0;i<nodes.length;i++) if(!done[i] && dist[i]<best){ best=dist[i]; u=i; }
-    if(u<0 || u===END) break;
+    if(u<0 || u===E) break;
     done[u]=true;
     for(const e of adj[u]){ const nd=dist[u]+e.d; if(nd<dist[e.to]){ dist[e.to]=nd; prev[e.to]=u; ptype[e.to]=e.type; } }
   }
-  if(dist[END]===Infinity) return null;
+  if(dist[E]===Infinity) return null;
   const path=[], types=[];
-  for(let v=END; v!==-1; v=prev[v]){ path.unshift(nodes[v]); if(prev[v]!==-1) types.unshift(ptype[v]); }
+  for(let v=E; v!==-1; v=prev[v]){ path.unshift(nodes[v]); if(prev[v]!==-1) types.unshift(ptype[v]); }
   return {path, types};
+}
+function buildRoute(st, it){
+  const g=baseGraph();
+  // destination: lane -> just outside the door -> (in front of the product)
+  const [lx,lz]=lanePtFor(st), LP=g.laneNode(st.level,lx,lz);
+  const [ddx,ddz]=L(st,0,it?(st.food?-3.5:-1.2):-3), D=g.add(ddx,ddz,st.level); g.link(LP,D,'f');
+  let END=D;
+  if(it){
+    const [mx,mz]=L(st,0,it.v-3.2), Mid=g.add(mx,mz,st.level), [tx,tz]=L(st,it.u*.5,it.v-3.2), T=g.add(tx,tz,st.level);
+    g.link(D,Mid,'f'); g.link(Mid,T,'f'); END=T;
+  }
+  const P=attach(g,player.x,player.z,player.y);
+  if(g.here===st) g.link(P,END,'f');
+  return shortest(g,P,END);
 }
 let auto = null;
 const walkEl=document.getElementById('walking'), walkTxt=document.getElementById('walkTxt');
@@ -1311,6 +1359,114 @@ function walkTo(st, it, done){
 function stopAuto(){ auto=null; walkEl.hidden=true; actionsEl.hidden=false; player.vy=0; }
 function finishAuto(){ const d=auto.done; stopAuto(); d(); }
 document.getElementById('stopWalk').addEventListener('click', ()=>{ stopAuto(); canvas.focus(); });
+// ================= Chase mini-game =================
+const chase = {on:false, phase:'off', left:0, survived:0, x:0, z:0, y:0, path:null, types:null, seg:0, d:0, replan:0, flash:0};
+const guard = (function(){
+  const g=new THREE.Group(), navy=new THREE.MeshLambertMaterial({color:0x1f2a44});
+  const b=new THREE.Mesh(bodyGeo,navy); b.position.y=1.17; g.add(b);
+  const h=new THREE.Mesh(headGeo,new THREE.MeshLambertMaterial({color:0xd9a37c})); h.position.y=1.72; g.add(h);
+  const cap=new THREE.Mesh(new THREE.CylinderGeometry(.19,.19,.12,14), navy); cap.position.y=1.88; g.add(cap);
+  const brim=new THREE.Mesh(new THREE.BoxGeometry(.3,.03,.18), navy); brim.position.set(0,1.83,.18); g.add(brim);
+  const badge=new THREE.Mesh(new THREE.BoxGeometry(.1,.1,.02), new THREE.MeshBasicMaterial({color:0xf2c230})); badge.position.set(.1,1.35,.25); g.add(badge);
+  const shades=new THREE.Mesh(new THREE.BoxGeometry(.27,.05,.04), new THREE.MeshBasicMaterial({color:0x111111})); shades.position.set(0,1.74,.16); g.add(shades);
+  const legMat=new THREE.MeshLambertMaterial({color:0x151b2b}), l1=new THREE.Mesh(legGeo,legMat), l2=new THREE.Mesh(legGeo,legMat);
+  l1.position.set(-.09,.39,0); l2.position.set(.09,.39,0); g.add(l1); g.add(l2);
+  const ex=new THREE.Sprite(new THREE.SpriteMaterial({map:textTexture('!','#e4572e','#ffffff',96,96,'800 76px Outfit, system-ui, sans-serif')})); ex.scale.set(.42,.42,1); ex.position.y=2.4; g.add(ex);
+  g.scale.setScalar(1.12); g.visible=false; g.userData={l1,l2}; scene.add(g);
+  return g;
+})();
+const chaseHud=document.getElementById('chaseHud'), hudMain=document.getElementById('hudMain'), hudSub=document.getElementById('hudSub');
+const dangerEl=document.getElementById('danger'), overEl=document.getElementById('gameOver');
+function onStairY(y){ return Math.abs(y-Math.round(y/FH)*FH)>.05; }
+function blockedAt(x,z,y,r){ const y0=y+.3, y1=y+1.8; for(const c of colliders){ if(x+r>c.x0 && x-r<c.x1 && z+r>c.z0 && z-r<c.z1 && y1>c.y0 && y0<c.y1) return true; } return false; }
+function lineClear(ax,az,bx,bz,lv){
+  const n=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)/.4)), y=lv*FH;
+  for(let i=1;i<n;i++){ const k=i/n, x=ax+(bx-ax)*k, z=az+(bz-az)*k;
+    if(blockedAt(x,z,y,.3)) return false;
+    if(lv===1 && (inHole(x,z)||inShaft(x,z))) return false;
+    if(lv===2 && inAtrium(x,z)) return false; }
+  return true;
+}
+// link a free-standing node straight to every network point it can see (stops the guard snapping back to the lane)
+function linkVisible(g,P){
+  const A=g.nodes[P], n=g.nodes.length;
+  for(let i=0;i<n;i++){ if(i===P) continue; const B=g.nodes[i]; if(B.lv!==A.lv) continue;
+    const d=Math.hypot(A.x-B.x,A.z-B.z); if(d<.01 || d>22) continue;
+    if(lineClear(A.x,A.z,B.x,B.z,A.lv)) g.link(P,i,'f'); }
+}
+function chasePath(){
+  const g=baseGraph(), S=attach(g,chase.x,chase.z,chase.y), E=attach(g,player.x,player.z,player.y), A=g.nodes[S], B=g.nodes[E];
+  const sOn=onStairY(chase.y), pOn=onStairY(player.y);
+  if(!sOn) linkVisible(g,S);
+  if(!pOn) linkVisible(g,E);
+  if(!sOn && !pOn){ if(A.lv===B.lv && Math.hypot(A.x-B.x,A.z-B.z)<16 && lineClear(A.x,A.z,B.x,B.z,A.lv)) g.link(S,E,'f'); }
+  else if(Math.abs(chase.x)<3.2 && Math.abs(player.x)<3.2 && Math.sign(chase.z)===Math.sign(player.z)){
+    const lo=Math.min(chase.y,player.y), hi=Math.max(chase.y,player.y);
+    if(hi<=FH+.01) g.link(S,E,'s01'); else if(lo>=FH-.01) g.link(S,E,'s12');
+  }
+  return shortest(g,S,E);
+}
+function spawnGuard(){
+  const lv=lvl(), {hx,hz}=LANE[lv], cands=[[-hx,-hz],[hx,-hz],[hx,hz],[-hx,hz],[-hx,0],[hx,0],[0,-hz],[0,hz]];
+  let best=cands[0], bd=-1;
+  for(const c of cands){ const d=Math.hypot(c[0]-player.x,c[1]-player.z); if(d>bd){ bd=d; best=c; } }
+  chase.x=best[0]; chase.z=best[1]; chase.y=lv*FH;
+}
+function startChase(){
+  if(auto) stopAuto();
+  closeCoach(); closeCard(); showDrop(false); searchInput.blur(); toggleDir(false); overEl.hidden=true;
+  spawnGuard();
+  Object.assign(chase,{on:true, phase:'head', left:10, survived:0, path:null, replan:0, flash:0});
+  guard.visible=true; guard.position.set(chase.x,chase.y,chase.z);
+  chaseHud.hidden=false; actionsEl.hidden=false; canvas.focus();
+}
+function endChase(){ chase.on=false; chase.phase='off'; guard.visible=false; chaseHud.hidden=true; dangerEl.style.opacity='0'; overEl.hidden=true; canvas.focus(); }
+function caught(){
+  chase.phase='over';
+  const s=chase.survived; let best=0; try{ best=+localStorage.getItem('lc.chase.best')||0; }catch(_){}
+  const isBest = s>best; if(isBest){ best=s; try{ localStorage.setItem('lc.chase.best',String(s)); }catch(_){} }
+  document.getElementById('ovTime').textContent = s.toFixed(1);
+  document.getElementById('ovBest').textContent = isBest ? 'That’s your best time yet.' : 'Your best: '+best.toFixed(1)+' seconds';
+  chaseHud.hidden=true; overEl.hidden=false;
+  for(const k in keys) keys[k]=false;
+}
+function chaseStep(dt){
+  if(!chase.on) return;
+  const dx=player.x-chase.x, dz=player.z-chase.z, dist=Math.hypot(dx,dz), dy=Math.abs(player.y-chase.y);
+  if(chase.phase==='head'){
+    chase.left-=dt; guard.rotation.y=Math.atan2(dx,dz);
+    hudMain.textContent='Run! He starts chasing in '+Math.max(1,Math.ceil(chase.left));
+    hudSub.textContent=coarse?'Push the stick all the way to sprint':'Hold Shift to sprint';
+    if(chase.left<=0){ chase.phase='run'; chase.flash=1.6; }
+    return;
+  }
+  if(chase.phase!=='run') return;
+  chase.survived+=dt; chase.replan-=dt;
+  if(chase.replan<=0){ chase.replan=.35; const r=chasePath(); if(r){ chase.path=r.path; chase.types=r.types; chase.seg=0; chase.d=0; } else chase.path=null; }
+  let rem=Math.min(8.6, 5.6+chase.survived*.06)*dt, moved=false, dirx=dx, dirz=dz;
+  if(chase.path){
+    while(rem>0){
+      const A=chase.path[chase.seg], B=chase.path[chase.seg+1]; if(!B) break;
+      const left=Math.hypot(B.x-A.x,B.z-A.z)-chase.d;
+      if(rem>=left){ rem-=left; chase.seg++; chase.d=0; } else { chase.d+=rem; rem=0; }
+    }
+    const A=chase.path[chase.seg], B=chase.path[chase.seg+1];
+    if(B){ const len=Math.hypot(B.x-A.x,B.z-A.z)||1, k=chase.d/len; chase.x=A.x+(B.x-A.x)*k; chase.z=A.z+(B.z-A.z)*k; chase.y=yOn(chase.types[chase.seg],A,chase.z); dirx=B.x-A.x; dirz=B.z-A.z; moved=true; }
+  }
+  guard.rotation.y=Math.atan2(dirx,dirz);
+  const sw = moved ? Math.sin(t*11)*.65 : 0; guard.userData.l1.rotation.x=sw; guard.userData.l2.rotation.x=-sw;
+  guard.position.set(chase.x,chase.y,chase.z);
+  if(dist<.95 && dy<1.2){ caught(); dangerEl.style.opacity='0'; return; }
+  chase.flash=Math.max(0,chase.flash-dt);
+  hudMain.textContent = chase.flash>0 ? 'Here he comes!' : 'Survived '+chase.survived.toFixed(1)+' s';
+  hudSub.textContent = dy>3 ? 'He’s '+(chase.y>player.y?'above':'below')+' you' : Math.round(dist)+' m away';
+  dangerEl.style.opacity = dy<3 ? String(Math.max(0,Math.min(1,(9-dist)/9))*.9) : '0';
+}
+document.getElementById('gameDot').addEventListener('click', startChase);
+document.getElementById('giveUp').addEventListener('click', endChase);
+document.getElementById('againBtn').addEventListener('click', startChase);
+document.getElementById('leaveBtn').addEventListener('click', endChase);
+
 function yOn(type, A, z){
   if(type==='s01') return Math.max(0,Math.min(FH,(Math.abs(z)-2)/2));
   if(type==='s12') return FH+Math.max(0,Math.min(FH,(Math.abs(z)-16)/2));
@@ -1358,7 +1514,8 @@ function step(dt){
   len = Math.hypot(f,r);
   if(len>.05){
     if(len>1){ f/=len; r/=len; }
-    const sp = (keys.ShiftLeft||keys.ShiftRight ? 9 : 5)*dt;
+    const fast = keys.ShiftLeft||keys.ShiftRight||(coarse && Math.hypot(stickVec.x,stickVec.y)>.9);
+    const sp = (fast ? 9 : 5)*dt;
     const sy=Math.sin(player.yaw), cy=Math.cos(player.yaw);
     move((-sy*f + cy*r)*sp, (-cy*f - sy*r)*sp);
   }
@@ -1368,6 +1525,7 @@ function step(dt){
   }
   camera.position.set(player.x, player.y + 1.65 + (len>.05 ? Math.sin(t*9)*.03 : 0), player.z);
   camera.rotation.set(player.pitch, player.yaw, 0);
+  chaseStep(dt);
   if(!reduceMotion){
     for(const m of spinners) m.rotation.y += dt*.6;
     updatePeople(dt,t);
@@ -1385,7 +1543,7 @@ function frame(now){
 }
 if(reduceMotion) updatePeople(0,0);
 // test hook: lets an automated check drive the player and render a frame
-window.__mall = {player, ELEV, keys, sendElev, step, doSearch, goTo, STORES, closeCoach, travelToItem, travelToShop, getAuto:()=>auto,
+window.__mall = {player, ELEV, keys, sendElev, step, doSearch, goTo, STORES, closeCoach, travelToItem, travelToShop, getAuto:()=>auto, chase, startChase, endChase, guard, chasePath,
   wouldBlock:(x,z,y)=>{ const oy=player.y; player.y=y; const b=blocked(x,z); player.y=oy; return b; },
   search:q=>runSearch(q).res.map(r=>r.it.n+' $'+r.it.p+' ('+r.st.name+', '+r.sc+')'),
   render:()=>{ updateSearchFx(t); renderer.render(scene,camera); drawMap(); updateWhere(); updateAction(); }};
