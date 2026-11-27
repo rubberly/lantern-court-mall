@@ -3,9 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Walk through Lantern Court, a small 3D mall with six stores and clickable products.">
+<meta name="description" content="Walk through Lantern Court, a two-level 3D mall with 36 shops, stairs, glass elevators and a food court.">
 <title>Lantern Court Mall</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@400;500;600&display=swap">
 <style>
@@ -18,8 +17,8 @@
   color-scheme:light;
 }
 [hidden]{display:none!important}
-html,body{height:100%;overflow:hidden}
-body{background:var(--ground);color:var(--ink);font-family:var(--body);-webkit-user-select:none;user-select:none}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:14px;-webkit-user-select:none;user-select:none}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
 .hud{position:fixed;z-index:5;display:flex;gap:8px;align-items:center}
 #top{top:calc(env(safe-area-inset-top,0px) + 12px);left:max(12px,env(safe-area-inset-left,0px));flex-wrap:wrap;max-width:calc(100% - 170px)}
@@ -28,20 +27,23 @@ body{background:var(--ground);color:var(--ink);font-family:var(--body);-webkit-u
 .brand span{color:var(--accent)}
 button{font:inherit;color:inherit;cursor:pointer}
 #dirBtn{font-weight:600}
-#dirBtn:focus-visible,.go:focus-visible,#close:focus-visible,#card a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:focus-visible,#card a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+#level{font-family:var(--display);font-weight:700;background:var(--ink);color:#fff;border-color:var(--ink)}
 #where{font-weight:600}
-#where[hidden]{display:none!important}
-#map{position:fixed;z-index:5;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));width:132px;height:176px;background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;box-shadow:0 4px 14px rgb(31 27 46 / .12)}
+#map{position:fixed;z-index:5;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));width:120px;height:182px;background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;box-shadow:0 4px 14px rgb(31 27 46 / .12)}
 #help{bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12.5px;color:var(--muted)}
-#dir{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 60px);left:max(12px,env(safe-area-inset-left,0px));width:min(280px,calc(100% - 24px));background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;padding:14px;box-shadow:0 10px 30px rgb(31 27 46 / .18)}
-#dir h3{margin:0 0 4px;font-family:var(--display);font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-#dir ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
-.go{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:8px}
+#act{position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 60px);background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:15px;box-shadow:0 8px 22px rgb(217 87 43 / .35)}
+#act:disabled{background:var(--ink);opacity:.85;box-shadow:none;cursor:default}
+#act kbd{font:600 11px var(--body);background:rgb(255 255 255 / .25);border-radius:5px;padding:2px 6px;margin-left:8px}
+#dir{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 60px);left:max(12px,env(safe-area-inset-left,0px));width:min(300px,calc(100% - 24px));max-height:calc(100% - 140px);overflow:auto;box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;padding:14px;box-shadow:0 10px 30px rgb(31 27 46 / .18)}
+#dir h3{margin:6px 0 4px;font-family:var(--display);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#dir ul{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:2px}
+.go{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:7px 8px}
 .go:hover{background:#f2e8da}
-.sw{width:14px;height:14px;border-radius:4px;flex:none}
+.sw{width:12px;height:12px;border-radius:4px;flex:none}
 .go small{margin-left:auto;color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
 #tip{position:fixed;z-index:6;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:5px 9px;border-radius:8px;transform:translate(14px,14px)}
-#card{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(380px,calc(100% - 32px));background:var(--panel);border:1px solid var(--panel-line);border-radius:20px;padding:18px 18px 16px;box-shadow:0 18px 40px rgb(31 27 46 / .25);display:grid;gap:6px}
+#card{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(380px,calc(100% - 32px));box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:20px;padding:18px 18px 16px;box-shadow:0 18px 40px rgb(31 27 46 / .25);display:grid;gap:6px}
 #card .st{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
 #card h2{margin:0;font-family:var(--display);font-size:22px;line-height:1.15;text-wrap:balance;padding-right:30px}
 #card .price{font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
@@ -52,22 +54,23 @@ button{font:inherit;color:inherit;cursor:pointer}
 #stick{position:fixed;z-index:4;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgb(255 250 243 / .35);border:2px solid rgb(255 250 243 / .8);pointer-events:none}
 #knob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:var(--panel);box-shadow:0 3px 10px rgb(0 0 0 / .2)}
 #loading{position:fixed;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--ink);z-index:9;background:var(--ground)}
-@media (max-width:520px){#help{white-space:normal;text-align:center;width:calc(100% - 32px)} #map{width:100px;height:134px} #top{max-width:calc(100% - 130px)}}
+@media (max-width:560px){#help{white-space:normal;text-align:center;width:calc(100% - 32px);box-sizing:border-box} #map{width:92px;height:140px} #top{max-width:calc(100% - 120px)} #act{bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}}
 </style>
 </head>
 <body>
-
 <canvas id="c" tabindex="0" aria-label="3D mall. Use arrow keys or WASD to walk, drag to look around, click a product to see it."></canvas>
 <div id="loading">Opening the doors…</div>
 
 <div class="hud" id="top">
   <div class="chip brand">Lantern <span>Court</span></div>
   <button class="chip" id="dirBtn" aria-expanded="false" aria-controls="dir">Directory</button>
+  <div class="chip" id="level">Level 1</div>
   <div class="chip" id="where" hidden></div>
 </div>
-<canvas id="map" width="264" height="352" aria-hidden="true"></canvas>
-<div id="dir" hidden><h3>Store directory</h3><ul id="dirList"></ul></div>
-<div class="hud chip" id="help">Drag to look · WASD or arrow keys to walk · Shift to hurry · Click a product</div>
+<canvas id="map" width="240" height="364" aria-hidden="true"></canvas>
+<div id="dir" hidden></div>
+<button id="act" hidden></button>
+<div class="hud chip" id="help">Drag to look · WASD or arrows to walk · Shift to hurry · Click a product · E for elevator</div>
 <div id="tip" hidden></div>
 <div id="stick" hidden><div id="knob"></div></div>
 
@@ -89,67 +92,104 @@ window.addEventListener('error', function(e){ if(window.__noGL) return; mallFail
 </script>
 <script src="three.min.js" onerror="mallFail('The 3D library (three.min.js) didn’t load. Keep it in the same folder as this page.')"></script>
 <script>
-if(window.THREE && !window.__noGL) (function(){
-const STORES = [
-  {name:'Sneaker Shop', tag:'Footwear', color:'#d9572b', side:-1, zc:-20, items:[
-    {n:'Classic white sneakers', p:65, d:'Clean leather low-tops that go with everything.', g:['box',.9,.45,.4], c:0xf7f4ee, q:'white leather sneakers'},
-    {n:'Running shoes', p:90, d:'Light, cushioned trainers for daily miles.', g:['box',.9,.45,.4], c:0x3b7dd8, q:'running shoes'},
-    {n:'Canvas high-tops', p:75, d:'Ankle-height canvas classics in deep red.', g:['box',.8,.7,.4], c:0xb3262e, q:'canvas high top sneakers'},
-    {n:'Pool slides', p:25, d:'Soft foam slides for the pool or the locker room.', g:['box',.8,.2,.35], c:0x222222, q:'slide sandals'},
-    {n:'Crew socks, 6-pack', p:14, d:'Cushioned cotton crews, six pairs.', g:['cyl',.25,.7], c:0xeeeeee, q:'crew socks 6 pack'}]},
-  {name:'Tech Store', tag:'Electronics', color:'#2f6fd0', side:-1, zc:0, items:[
-    {n:'Wireless earbuds', p:49, d:'Pocket case, 24 hours of battery with charges.', g:['sphere',.3], c:0xffffff, q:'wireless earbuds'},
-    {n:'Fast phone charger', p:19, d:'USB-C wall charger that fills a phone in about an hour.', g:['box',.35,.35,.35], c:0xdedede, q:'usb c fast charger'},
-    {n:'Mechanical keyboard', p:69, d:'Clicky switches and a compact layout.', g:['box',1.1,.12,.4], c:0x2b2b33, q:'mechanical keyboard'},
-    {n:'Smart watch', p:129, d:'Tracks steps, sleep, and heart rate.', g:['cyl',.28,.12], c:0x111111, q:'smart watch'},
-    {n:'Portable speaker', p:39, d:'Waterproof speaker that clips to a bag.', g:['cyl',.25,.6], c:0x1fa58a, q:'portable bluetooth speaker'}]},
-  {name:'Game Store', tag:'Games', color:'#7a46c9', side:-1, zc:20, items:[
-    {n:'Wireless controller', p:59, d:'Works with PC and most consoles.', g:['box',.7,.25,.45], c:0x2a2a2a, q:'wireless game controller'},
-    {n:'Gaming headset', p:45, d:'Over-ear headset with a flip-up mic.', g:['torus',.32,.07], c:0xd13c3c, q:'gaming headset'},
-    {n:'Strategy board game', p:29, d:'2–4 players, about an hour a game.', g:['box',.8,.18,.8], c:0xe2b23a, q:'strategy board game'},
-    {n:'Speed puzzle cube', p:10, d:'Smooth-turning 3×3 for speedsolving.', g:['box',.4,.4,.4], c:0x29a3d6, q:'speed cube 3x3'},
-    {n:'Retro handheld', p:65, d:'Pocket console for classic-style games.', g:['box',.45,.7,.15], c:0xc9c4d6, q:'retro handheld game console'}]},
-  {name:'Book Nook', tag:'Books', color:'#2e8a57', side:1, zc:-20, items:[
-    {n:'Mystery novel', p:16, d:'A page-turner set in a snowed-in hotel.', g:['box',.5,.75,.15], c:0x24344f, q:'mystery novel bestseller'},
-    {n:'Weeknight cookbook', p:24, d:'Thirty-minute dinners for busy nights.', g:['box',.6,.8,.12], c:0xe07a3c, q:'weeknight cookbook'},
-    {n:'Sketchbook', p:12, d:'Thick paper that handles ink and markers.', g:['box',.55,.7,.08], c:0x111111, q:'sketchbook'},
-    {n:'Comic collection', p:18, d:'The first story arc in one volume.', g:['box',.5,.75,.1], c:0xd9c23a, q:'graphic novel collection'},
-    {n:'Clip-on reading lamp', p:22, d:'Warm LED light that clips to any book.', g:['cone',.25,.55], c:0xf0e6cf, q:'clip on book light'}]},
-  {name:'Toy Shop', tag:'Toys', color:'#e0a21b', side:1, zc:0, items:[
-    {n:'Building bricks set', p:40, d:'500 pieces with ideas for 3 builds.', g:['box',.6,.4,.6], c:0xd8352a, q:'building bricks set'},
-    {n:'RC race car', p:35, d:'Rechargeable, about 15 mph flat out.', g:['box',.8,.3,.45], c:0x2a9d5c, q:'remote control car'},
-    {n:'Plush bear', p:18, d:'Very soft and machine washable.', g:['sphere',.38], c:0xa8774b, q:'plush teddy bear'},
-    {n:'Diamond kite', p:15, d:'Flies in light wind, easy for beginners.', g:['cone',.4,.7,4], c:0x3aa0e0, q:'diamond kite'},
-    {n:'Art kit', p:22, d:'Markers, pencils, and crayons in a case.', g:['box',.75,.15,.5], c:0xef6fa8, q:'kids art kit'}]},
-  {name:'Home Goods', tag:'Home', color:'#b5476b', side:1, zc:20, items:[
-    {n:'Scented candle', p:16, d:'Cedar and vanilla, about 40 hours.', g:['cyl',.22,.4], c:0xf2e3c7, q:'scented candle'},
-    {n:'Knit throw blanket', p:30, d:'Chunky knit, 50 by 60 inches.', g:['box',.8,.35,.5], c:0x9db1a2, q:'knit throw blanket'},
-    {n:'Mug set of 4', p:24, d:'Stoneware mugs, dishwasher safe.', g:['cyl',.22,.35], c:0x3f6c8f, q:'stoneware mug set'},
-    {n:'Desk plant', p:20, d:'A small, hard-to-kill plant in a ceramic pot.', g:['plant'], c:0xffffff, q:'small desk plant'},
-    {n:'Wall clock', p:28, d:'Quiet sweep movement, 12 inches wide.', g:['cyl',.4,.08,'flat'], c:0xffffff, q:'silent wall clock'}]}
+(function(){
+if(!window.THREE || window.__noGL) return;
+
+// ---------------- Store data ----------------
+// item: name|price|shape|dims|hex   shapes: b box(w,h,d) c cylinder(r,h) s sphere(r) k cone(r,h,seg) t ring(r,tube) p plant
+const RAW = [
+ ['Sneaker Shop','Footwear','#d9572b','White sneakers|65|b|.9,.45,.4|f4f1ea','Running shoes|90|b|.9,.45,.4|3b7dd8','Canvas high-tops|75|b|.8,.7,.4|b3262e','Pool slides|25|b|.8,.2,.35|222222'],
+ ['Tech Store','Electronics','#2f6fd0','Wireless earbuds|49|s|.3|ffffff','Mechanical keyboard|69|b|1.1,.12,.4|2b2b33','Smart watch|129|c|.28,.12|111111','Portable speaker|39|c|.25,.6|1fa58a'],
+ ['Game Store','Games','#7a46c9','Wireless controller|59|b|.7,.25,.45|2a2a2a','Gaming headset|45|t|.32,.07|d13c3c','Strategy board game|29|b|.8,.18,.8|e2b23a','Retro handheld|65|b|.45,.7,.15|c9c4d6'],
+ ['Book Nook','Books','#2e8a57','Mystery novel|16|b|.5,.75,.15|24344f','Weeknight cookbook|24|b|.6,.8,.12|e07a3c','Sketchbook|12|b|.55,.7,.08|111111','Comic collection|18|b|.5,.75,.1|d9c23a'],
+ ['Toy Shop','Toys','#e0a21b','Building bricks set|40|b|.6,.4,.6|d8352a','RC race car|35|b|.8,.3,.45|2a9d5c','Plush bear|18|s|.38|a8774b','Diamond kite|15|k|.4,.7,4|3aa0e0'],
+ ['Home Goods','Home','#b5476b','Scented candle|16|c|.22,.4|f2e3c7','Knit throw blanket|30|b|.8,.35,.5|9db1a2','Mug set of 4|24|c|.22,.35|3f6c8f','Desk plant|20|p||ffffff'],
+ ['Phone Hub','Phones','#1b8fa8','Phone case|19|b|.4,.8,.08|e85d75','Fast charger|19|b|.35,.35,.35|dedede','Power bank|29|b|.4,.7,.15|333333','Screen protector|9|b|.45,.8,.03|cfe8f2'],
+ ['Sports Locker','Sports','#c2402b','Basketball|29|s|.4|d9692b','Soccer ball|25|s|.38|f4f4f4','Tennis racket|59|b|.3,.9,.06|2c6fb0','Water bottle|15|c|.15,.6|26a69a'],
+ ['Pet Pantry','Pets','#6b8e23','Dog bed|45|c|.6,.25|8b6b4a','Chew toy|9|t|.25,.08|f2a93b','Cat tower|69|b|.5,.9,.5|c9b79c','Pet bowl|12|c|.3,.15|4a7bd1'],
+ ['Candy Jar','Sweets','#e5487a','Gummy bears|6|c|.25,.4|ff6f61','Chocolate bar|4|b|.6,.1,.3|5b3a29','Lollipop jar|12|c|.3,.5|f7c6d9','Box of fudge|18|b|.5,.3,.5|c43c62'],
+ ['Music Box','Music','#8b3fb0','Acoustic guitar|129|b|.45,1.1,.12|c48a4a','Ukulele|49|b|.3,.7,.08|e0a96d','Drum pad|39|c|.35,.12|333333','Keyboard piano|99|b|1.2,.12,.35|1f1f1f'],
+ ['Kitchen Corner','Kitchen','#d4822a','Chef knife|39|b|.8,.05,.15|c9ced4','Cast iron pan|35|c|.4,.12|2b2b2b','Blender|59|c|.22,.8|e6e6e6','Cutting board|22|b|.8,.05,.5|b98551'],
+ ['Art Supply','Art','#e0453a','Paint set|24|b|.7,.1,.45|f2f2f2','Easel|45|k|.4,1,3|a87a4f','Brush set|14|c|.12,.6|3d3d8f','Canvas pack|19|b|.6,.8,.05|faf7f0'],
+ ['Outdoor Outfitters','Outdoors','#3d7a4a','Camping tent|119|k|.6,.6,4|3f8f5a','Sleeping bag|59|c|.3,.7|e2622b','Camp lantern|25|c|.18,.45|f0c24a','Hiking boots|99|b|.8,.6,.4|6b4a2b'],
+ ['Beauty Bar','Beauty','#c2577a','Lip balm set|9|c|.08,.4|f4a6b8','Face mask pack|15|b|.5,.6,.08|9fd3c7','Hair dryer|49|b|.3,.7,.25|5a4a6e','Nail polish|8|c|.12,.3|c2185b'],
+ ['Watch & Jewelry','Jewelry','#a68a2b','Silver necklace|59|t|.25,.03|d7d7d7','Gold ring|79|t|.12,.04|e2b23a','Sport watch|89|c|.25,.12|222222','Pearl earrings|39|s|.12|f5e6b8'],
+ ['Kids Closet','Kids','#4aa3df','Rain jacket|35|b|.6,.75,.2|f2c230','Pajama set|22|b|.6,.4,.3|9ec7f2','Kids sneakers|39|b|.6,.35,.3|e85d75','Pom beanie|12|s|.28|5aa469'],
+ ['Party Store','Party','#f05a8c','Balloon pack|8|s|.35|ff4f7a','Party hats|7|k|.25,.5|7a46c9','Streamers|6|c|.25,.2|2ec4b6','Piñata|29|s|.4|f9c74f'],
+ ['Denim Depot','Clothing','#2f4f7f','Slim jeans|49|b|.6,.8,.15|33507a','Denim jacket|69|b|.7,.8,.2|5577a8','Denim shorts|35|b|.6,.4,.15|6c8fc0','Leather belt|19|t|.3,.04|5a3d2b'],
+ ['Hat Rack','Hats','#8a5a3b','Baseball cap|22|s|.3|c0392b','Bucket hat|25|c|.3,.25|e8d5a8','Winter beanie|15|s|.28|2c3e50','Sun hat|29|c|.45,.12|f0d9a0'],
+ ['Backpack Base','Bags','#3a6b8c','School backpack|45|b|.6,.8,.3|2d6a8a','Laptop sleeve|25|b|.7,.5,.06|555555','Duffel bag|49|c|.3,.8|1e1e1e','Fanny pack|19|b|.5,.2,.12|e27d3b'],
+ ['Garden Center','Garden','#4f9a4f','Potted fern|25|p||ffffff','Watering can|19|c|.25,.4|4ea36b','Seed packet set|9|b|.4,.5,.05|f3d26b','Garden gloves|12|b|.4,.5,.08|e0b97a'],
+ ['Camera Corner','Cameras','#444b5a','Instant camera|79|b|.5,.4,.3|f2a7c3','Tripod|29|k|.35,.9,3|222222','Zoom lens|199|c|.2,.4|1a1a1a','Photo album|19|b|.6,.6,.12|8b5e3c'],
+ ['Hobby Hangar','Hobbies','#c46a2b','Mini drone|69|b|.6,.12,.6|3c3c3c','Model plane kit|29|b|.8,.15,.5|9aa5b1','1000-piece puzzle|19|b|.7,.1,.5|58a4d4','Chess set|35|b|.7,.12,.7|e8e2d4'],
+ ['Comic Vault','Comics','#d6322f','Hero comic #1|5|b|.5,.75,.03|e2382b','Manga volume|12|b|.4,.6,.08|f4f4f4','Action figure|25|c|.12,.7|3b6fd8','Rolled poster|15|c|.08,.8|f2d24a'],
+ ['Bike Shop','Bikes','#2a8f6e','Bike helmet|45|s|.35|e0453a','Bike light|19|c|.12,.3|333333','Bottle cage|12|b|.15,.5,.1|888888','Bike lock|25|t|.25,.05|f2b630'],
+ ['Office Supply','Office','#5b6a7d','Notebook 3-pack|12|b|.5,.15,.7|3f72af','Desk lamp|29|k|.3,.6|f2f2f2','Pen set|9|c|.06,.6|222222','Daily planner|18|b|.5,.7,.1|c96f8f'],
+ ['Tea & Coffee','Drinks','#7a4a2b','Coffee beans|15|b|.4,.6,.2|5b3a29','Tea sampler|19|b|.6,.2,.4|9bbf8a','French press|29|c|.2,.5|cfd8dc','Travel mug|22|c|.18,.5|2f6f7f'],
+ ['Bath & Body','Bath','#6fa8b8','Bath bombs|12|s|.22|f6a6c1','Body lotion|14|c|.15,.5|f4efe6','Bubble bath|10|c|.18,.5|9fd8e8','Fluffy towel|25|b|.6,.3,.4|ffffff'],
+ ['Lamp & Light','Lighting','#d8a72b','Floor lamp|79|k|.35,1.1|f2e6c9','String lights|19|s|.3|ffd76b','Reading lamp|35|c|.15,.7|3b3b3b','LED strip|25|b|.8,.06,.1|ffffff'],
+ ['Card & Gift','Gifts','#c0406a','Birthday card|5|b|.4,.55,.02|f7d1dc','Gift bag|4|b|.45,.55,.2|7bc8a4','Photo frame|19|b|.5,.6,.05|c9a46a','Wrapping paper|8|c|.1,.9|d9433a'],
+ ['Fitness Gear','Fitness','#1f9e89','Yoga mat|25|c|.15,.8|7b5ea7','Dumbbells|35|b|.6,.15,.15|333333','Jump rope|9|t|.3,.03|e0453a','Resistance bands|15|t|.2,.04|2ec4b6'],
+ ['Eyewear','Glasses','#3b5ba8','Sunglasses|29|b|.6,.12,.15|222222','Reading glasses|19|b|.6,.12,.15|b78b4b','Glasses case|12|b|.6,.15,.25|4a6fa5','Blue-light glasses|35|b|.6,.12,.15|8ab0d8'],
+ ['Travel Shop','Travel','#2b7bb8','Carry-on suitcase|129|b|.6,.9,.3|3d4a5c','Neck pillow|19|t|.25,.1|9ab8d8','Packing cubes|25|b|.6,.3,.4|f29b4a','Luggage tag|8|b|.2,.3,.02|e0453a'],
+ ['Sunrise Bakery','Bakery','#c97a3b','Croissant|4|t|.2,.08|e0a050','Cupcake|5|k|.2,.35|f4a6c8','Sourdough loaf|8|s|.32|c98b4a','Cookie box|12|b|.5,.15,.5|f2e6c9'],
+ ['Pixel Arcade','Arcade','#6a3fd0','Token cup|10|c|.2,.3|e2b23a','Prize plush|15|s|.32|6fd0c0','Game card|20|b|.5,.6,.05|ff4f7a','Retro joystick|35|b|.4,.15,.4|222222']
 ];
+const FH = 6; // floor height
+const SLOTS = [];
+[-30,-18,-6,6,18,30].forEach(z=>{ SLOTS.push({fx:-18,fz:z,nx:-1,nz:0}); SLOTS.push({fx:18,fz:z,nx:1,nz:0}); });
+[-12,0,12].forEach(x=>{ SLOTS.push({fx:x,fz:36,nx:0,nz:1}); SLOTS.push({fx:x,fz:-36,nx:0,nz:-1}); });
+const STORES = RAW.map((r,i)=>{
+  const s = Object.assign({}, SLOTS[i%18]);
+  s.tx = s.nz; s.tz = -s.nx;
+  s.name=r[0]; s.tag=r[1]; s.color=r[2]; s.level = i<18?0:1;
+  s.items = r.slice(3).map(t=>{ const [n,p,sh,dims,c]=t.split('|'); return {n, p:+p, sh, d: dims?dims.split(',').map(Number):[], c:parseInt(c,16)}; });
+  return s;
+});
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const coarse = matchMedia('(pointer: coarse)').matches;
 const canvas = document.getElementById('c');
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+let renderer;
+try { renderer = new THREE.WebGLRenderer({canvas, antialias:true}); }
+catch(e){ mallFail('Your browser could not start 3D graphics (WebGL).<br><br>In Chrome or Edge: open Settings → System, turn on <b>Use graphics acceleration when available</b>, then restart the browser.'); return; }
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
 renderer.outputEncoding = THREE.sRGBEncoding;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xe9e2d6);
-scene.fog = new THREE.Fog(0xe9e2d6, 30, 70);
-const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 200);
+scene.fog = new THREE.Fog(0xe9e2d6, 45, 110);
+const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 160);
 camera.rotation.order = 'YXZ';
+scene.add(new THREE.HemisphereLight(0xfffaf0, 0xb8a68c, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 0.35); sun.position.set(6,20,10); scene.add(sun);
+scene.add(new THREE.AmbientLight(0xffffff, 0.12));
 
-scene.add(new THREE.HemisphereLight(0xfff8ee, 0xb8a68c, 0.85));
-const sun = new THREE.DirectionalLight(0xffffff, 0.45); sun.position.set(4,10,6); scene.add(sun);
-
+// ---------------- Static geometry batching ----------------
 const colliders = [];
-const mat = (c, o={}) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:.8, metalness:0}, o));
-function box(x,y,z,w,h,d,material,collide){
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), material);
-  m.position.set(x,y,z); scene.add(m);
-  if(collide) colliders.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2});
-  return m;
+function addCol(x0,x1,z0,z1,y0,y1){ colliders.push({x0,x1,z0,z1,y0,y1}); }
+const batches = new Map();
+function sbox(x,y,z,w,h,d,color,collide,glass){
+  const key = color+(glass?'g':'');
+  let b = batches.get(key);
+  if(!b){ b={color,glass,pos:[],nor:[],idx:[],n:0}; batches.set(key,b); }
+  const g = new THREE.BoxGeometry(w,h,d); g.translate(x,y,z);
+  const p=g.attributes.position.array, nn=g.attributes.normal.array, ix=g.index.array;
+  for(let i=0;i<p.length;i++){ b.pos.push(p[i]); b.nor.push(nn[i]); }
+  for(let i=0;i<ix.length;i++) b.idx.push(ix[i]+b.n);
+  b.n += p.length/3; g.dispose();
+  if(collide) addCol(x-w/2,x+w/2,z-d/2,z+d/2,y-h/2,y+h/2);
+}
+function flushBatches(){
+  batches.forEach(b=>{
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(b.pos,3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(b.nor,3));
+    g.setIndex(b.idx);
+    const m = b.glass ? new THREE.MeshLambertMaterial({color:b.color, transparent:true, opacity:.28, depthWrite:false})
+                      : new THREE.MeshLambertMaterial({color:b.color});
+    const mesh = new THREE.Mesh(g,m); if(b.glass) mesh.renderOrder = 2; scene.add(mesh);
+  });
+  batches.clear();
 }
 function textTexture(text, bg, fg, w=512, h=128, font='800 64px Outfit, system-ui, sans-serif'){
   const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
@@ -163,126 +203,245 @@ function textTexture(text, bg, fg, w=512, h=128, font='800 64px Outfit, system-u
   const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
   return t;
 }
+function signPlane(tex, w, h, x, y, z, rotY){
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({map:tex}));
+  m.position.set(x,y,z); m.rotation.y = rotY; scene.add(m); return m;
+}
+let tileImg = null;
+function tilePlane(cx,y,cz,w,d){
+  if(!tileImg){
+    tileImg=document.createElement('canvas'); tileImg.width=tileImg.height=256; const g=tileImg.getContext('2d');
+    for(let i=0;i<4;i++)for(let j=0;j<4;j++){ g.fillStyle=(i+j)%2?'#e6dccb':'#ddd1bd'; g.fillRect(i*64,j*64,64,64); }
+    g.strokeStyle='#cbbda6'; g.lineWidth=2; for(let k=0;k<=4;k++){ g.beginPath(); g.moveTo(k*64,0); g.lineTo(k*64,256); g.moveTo(0,k*64); g.lineTo(256,k*64); g.stroke(); }
+  }
+  const t=new THREE.CanvasTexture(tileImg); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(w/8,d/8); t.encoding=THREE.sRGBEncoding;
+  const f=new THREE.Mesh(new THREE.PlaneGeometry(w,d), new THREE.MeshLambertMaterial({map:t}));
+  f.rotation.x=-Math.PI/2; f.position.set(cx,y,cz); scene.add(f);
+}
 
-// Floor tiles
+// ---------------- Building shell ----------------
+const WALL = 0xf1ebe1, CEIL = 0xf4efe6, FASCIA = 0xc9643a;
+// atrium: x -10..10, z -28..28 ; concourse ring out to x ±18, z ±36 ; shops 14 deep beyond that
+tilePlane(0,0,0,36,72);
+sbox(0,-.06,0,70,.1,106,0xb9ab95,false);
+[[0,39,64,22],[0,-39,64,22],[-21,0,22,56],[21,0,22,56]].forEach(([x,z,w,d])=>{
+  sbox(x,FH-.15,z,w,.3,d,CEIL,false);
+  sbox(x,2*FH+.15,z,w,.3,d,CEIL,false);
+});
+tilePlane(0,FH+.01,32,36,8); tilePlane(0,FH+.01,-32,36,8); tilePlane(-14,FH+.01,0,8,56); tilePlane(14,FH+.01,0,8,56);
+sbox(0,FH-.35,28.05,20.2,.7,.12,FASCIA,false); sbox(0,FH-.35,-28.05,20.2,.7,.12,FASCIA,false);
+sbox(10.05,FH-.35,0,.12,.7,56.2,FASCIA,false); sbox(-10.05,FH-.35,0,.12,.7,56.2,FASCIA,false);
+const sky = new THREE.Mesh(new THREE.PlaneGeometry(20,56), new THREE.MeshBasicMaterial({color:0xdcefff})); sky.rotation.x=Math.PI/2; sky.position.set(0,2*FH-.02,0); scene.add(sky);
+for(let z=-24; z<=24; z+=6) sbox(0,2*FH-.1,z,20,.2,.3,0xcfc3b0,false);
+sbox(0,2*FH-.1,0,.3,.2,56,0xcfc3b0,false);
+[[-10,-28],[10,-28],[-10,28],[10,28]].forEach(([x,z])=>sbox(x,FH,z,.7,2*FH,.7,0xe2d8c8,true));
+
+// upper railings around the atrium (gaps for stairs at x -3..3 and elevators at z -1.5..1.5)
+function railSeg(x0,z0,x1,z1){
+  const cx=(x0+x1)/2, cz=(z0+z1)/2, w=Math.max(.08,Math.abs(x1-x0)), d=Math.max(.08,Math.abs(z1-z0));
+  sbox(cx,FH+.6,cz,w,1.1,d,0x9fc7e0,false,true);
+  sbox(cx,FH+1.15,cz,w+.04,.08,d+.04,0x7d8590,false);
+  addCol(Math.min(x0,x1)-.1,Math.max(x0,x1)+.1,Math.min(z0,z1)-.1,Math.max(z0,z1)+.1,FH,FH+1.3);
+}
+railSeg(-10,-28,-10,-1.5); railSeg(-10,1.5,-10,28); railSeg(10,-28,10,-1.5); railSeg(10,1.5,10,28);
+railSeg(-10,28,-3,28); railSeg(3,28,10,28); railSeg(-10,-28,-3,-28); railSeg(3,-28,10,-28);
+
+// ---------------- Stairs ----------------
+// north stair x -3..3 from z 16 (ground) up to z 28 (level 2); south mirrored
+const STAIRS = [{z0:16, dir:1},{z0:-16, dir:-1}];
+STAIRS.forEach(st=>{
+  for(let i=0;i<24;i++){
+    const top=(i+1)*.25, zc = st.z0 + st.dir*(i*.5+.25);
+    sbox(0,top/2,zc,6,top,.5, i%2?0xd9cdb9:0xe3d8c6, false);
+  }
+  const zEnd = st.z0 + st.dir*12;
+  addCol(-3.15,-2.95,Math.min(st.z0,zEnd),Math.max(st.z0,zEnd),0,FH+1.4);
+  addCol(2.95,3.15,Math.min(st.z0,zEnd),Math.max(st.z0,zEnd),0,FH+1.4);
+  addCol(-3,3,Math.min(zEnd,zEnd-.6*st.dir),Math.max(zEnd,zEnd-.6*st.dir),0,FH-.6);
+  const len=Math.hypot(12,6), ang=Math.atan2(6,12);
+  [-3.05,3.05].forEach(x=>{
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(.12,1.2,len), new THREE.MeshLambertMaterial({color:0x9fc7e0,transparent:true,opacity:.35,depthWrite:false}));
+    skirt.position.set(x,3+.6,st.z0+st.dir*6); skirt.rotation.x = -st.dir*ang; skirt.renderOrder=2; scene.add(skirt);
+    const hr = new THREE.Mesh(new THREE.BoxGeometry(.1,.1,len), new THREE.MeshLambertMaterial({color:0x7d8590}));
+    hr.position.set(x,3+1.2,st.z0+st.dir*6); hr.rotation.x = -st.dir*ang; scene.add(hr);
+  });
+});
+// mural on the tall back end of each staircase
 (function(){
-  const cv=document.createElement('canvas'); cv.width=cv.height=256; const g=cv.getContext('2d');
-  for(let i=0;i<4;i++)for(let j=0;j<4;j++){ g.fillStyle=(i+j)%2?'#e6dccb':'#ddd1bd'; g.fillRect(i*64,j*64,64,64); }
-  g.strokeStyle='#cbbda6'; g.lineWidth=2; for(let k=0;k<=4;k++){ g.beginPath(); g.moveTo(k*64,0); g.lineTo(k*64,256); g.moveTo(0,k*64); g.lineTo(256,k*64); g.stroke(); }
-  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(44/8,60/8); t.encoding=THREE.sRGBEncoding;
-  const f=new THREE.Mesh(new THREE.PlaneGeometry(44,60), mat(0xffffff,{map:t,roughness:.5}));
-  f.rotation.x=-Math.PI/2; scene.add(f);
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=512; const g=cv.getContext('2d');
+  g.fillStyle='#1f1b2e'; g.fillRect(0,0,512,512);
+  g.fillStyle='#d9572b'; g.fillRect(0,360,512,12);
+  g.fillStyle='#ffffff'; g.textAlign='center'; g.textBaseline='middle';
+  g.font='800 92px Outfit, system-ui, sans-serif'; g.fillText('Lantern',256,170); g.fillStyle='#f0a37f'; g.fillText('Court',256,265);
+  g.fillStyle='#ffffff'; g.font='600 34px Inter, system-ui, sans-serif'; g.fillText('36 shops · 2 levels',256,430);
+  const tex=new THREE.CanvasTexture(cv); tex.encoding=THREE.sRGBEncoding;
+  STAIRS.forEach(st=>{
+    const zEnd = st.z0 + st.dir*12;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(5.6,5.6), new THREE.MeshBasicMaterial({map:tex}));
+    m.position.set(0,2.9,zEnd+st.dir*.02); m.rotation.y = st.dir>0 ? 0 : Math.PI; scene.add(m);
+  });
 })();
-// Ceiling + skylight
-const ceil = new THREE.Mesh(new THREE.PlaneGeometry(44,60), mat(0xf6f1e8)); ceil.rotation.x=Math.PI/2; ceil.position.y=6; scene.add(ceil);
-const sky = new THREE.Mesh(new THREE.PlaneGeometry(6,56), new THREE.MeshBasicMaterial({color:0xdff0ff})); sky.rotation.x=Math.PI/2; sky.position.y=5.97; scene.add(sky);
-for(let z=-26; z<=26; z+=6.5){ box(0,5.9,z,6.4,.12,.25,mat(0xcfc3b0),false); }
+function stairHeight(x,z){
+  if(x<-3||x>3) return -1;
+  for(const st of STAIRS){
+    const t = (z-st.z0)*st.dir;
+    if(t>=0 && t<=12) return Math.max(0,Math.min(FH,t/12*FH));
+  }
+  return -1;
+}
 
-// Corridor end walls
-const wallMat = mat(0xf1ebe1);
-box(0,3,-30,12,6,.4,wallMat,true);
-box(0,3,30,12,6,.4,wallMat,true);
-const exitSign = new THREE.Mesh(new THREE.PlaneGeometry(4,1), new THREE.MeshBasicMaterial({map:textTexture('Food court opens soon','#1f1b2e','#ffffff')}));
-exitSign.position.set(0,3.6,-29.75); scene.add(exitSign);
+// ---------------- Elevators ----------------
+const ELEV = [1,-1].map(s=>({s, y:0, target:0, moving:false}));
+const elevTex = textTexture('Elevator','#1f1b2e','#ffffff',256,96,'700 52px Outfit, system-ui, sans-serif');
+ELEV.forEach(e=>{
+  const s=e.s, xi=s*7, xo=s*10, xc=s*8.5;
+  sbox(xi,FH,0,.08,2*FH,3,0x9fc7e0,true,true);
+  sbox(xc,FH,-1.5,3,2*FH,.08,0x9fc7e0,true,true);
+  sbox(xc,FH,1.5,3,2*FH,.08,0x9fc7e0,true,true);
+  [[xi,-1.5],[xi,1.5],[xo,-1.5],[xo,1.5]].forEach(([x,z])=>sbox(x,FH,z,.18,2*FH,.18,0x5d6470,false));
+  sbox(xc,2*FH-.2,0,3.2,.4,3.2,0x5d6470,false);
+  for(let lv=0;lv<2;lv++){
+    signPlane(elevTex,1.6,.6, s*10.12, lv*FH+4.1, 0, s*Math.PI/2);
+    sbox(s*10.05,lv*FH+3.6,0,.06,.12,3,FASCIA,false);
+  }
+  const cab = new THREE.Group();
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(2.9,.16,2.9), new THREE.MeshLambertMaterial({color:0x4a505c})); floor.position.y=-.08; cab.add(floor);
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(2.9,.12,2.9), new THREE.MeshLambertMaterial({color:0x4a505c})); roof.position.y=2.9; cab.add(roof);
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.6,.04,1.6), new THREE.MeshBasicMaterial({color:0xfff3d6})); lamp.position.y=2.83; cab.add(lamp);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(.06,.06,2.6), new THREE.MeshLambertMaterial({color:0xc9ced4})); bar.position.set(-s*1.3,1,0); cab.add(bar);
+  cab.position.set(xc,0,0); scene.add(cab); e.mesh=cab;
+});
+function inCab(e,x,z){ const lo=Math.min(e.s*7,e.s*10), hi=Math.max(e.s*7,e.s*10); return x>lo && x<hi && z>-1.5 && z<1.5; }
 
-// Stores
-const clickables = [];
-const spinners = [];
+// ---------------- Shops ----------------
+const clickables = [], spinners = [];
 const fmt = n => '$'+n;
-STORES.forEach(st => {
-  const s = st.side, zc = st.zc, col = new THREE.Color(st.color);
-  const pastel = col.clone().lerp(new THREE.Color(0xffffff), .78);
-  const storeWall = mat(pastel);
-  const front = s*6;
-  // front wall with a 6m doorway
-  box(front,3,zc-6.5,.4,6,7,wallMat,true);
-  box(front,3,zc+6.5,.4,6,7,wallMat,true);
-  box(front,5,zc,.4,2,6,wallMat,false);
-  // door frame trim
-  box(front,4.05,zc,.5,.1,6,mat(col),false);
-  box(front,2,zc-3,.5,4,.12,mat(col),false);
-  box(front,2,zc+3,.5,4,.12,mat(col),false);
-  // back + dividers
-  box(s*22,3,zc,.4,6,20,storeWall,true);
-  box(s*14,3,zc-10,16,6,.4,storeWall,true);
-  box(s*14,3,zc+10,16,6,.4,storeWall,true);
-  // store floor
-  const fl = new THREE.Mesh(new THREE.PlaneGeometry(16,20), mat(pastel.clone().lerp(new THREE.Color(0xd8cdbb),.4),{roughness:.6}));
-  fl.rotation.x=-Math.PI/2; fl.position.set(s*14,.01,zc); scene.add(fl);
-  // signs
-  const signTex = textTexture(st.name, st.color, '#ffffff');
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(5.2,1.3), new THREE.MeshBasicMaterial({map:signTex}));
-  sign.position.set(front - s*.22, 4.95, zc); sign.rotation.y = s<0 ? Math.PI/2 : -Math.PI/2; scene.add(sign);
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(6,1.5), new THREE.MeshBasicMaterial({map:signTex}));
-  back.position.set(s*21.78, 4.2, zc); back.rotation.y = s<0 ? Math.PI/2 : -Math.PI/2; scene.add(back);
-  // back shelving (decor)
-  box(s*21.3,1.3,zc,1,2.6,12,mat(0xffffff),true);
-  for(let k=0;k<10;k++){ const c=new THREE.Color().setHSL(Math.random(),.45,.6); box(s*20.9,.5+Math.floor(k/5)*1.1+.35, zc-4.8+(k%5)*2.4, .5,.6,1.4, mat(c), false); }
-  // counter
-  box(s*19,0.55,zc+7.6,3.2,1.1,1.2,mat(col.clone().lerp(new THREE.Color(0x222222),.2)),true);
-  // light
-  const pl = new THREE.PointLight(0xfff1dc, .55, 22); pl.position.set(s*14,5.2,zc); scene.add(pl);
-  // pedestals + products
-  const spots = [[4,-5],[4,5],[9,-6.5],[9,6.5],[11.5,0]];
+function L(sh,u,v){ return [sh.fx + sh.tx*u + sh.nx*v, sh.fz + sh.tz*u + sh.nz*v]; }
+function lbox(sh,u,v,yc,lu,lv,h,color,collide){ const [x,z]=L(sh,u,v); const ax=sh.nx!==0; sbox(x,yc,z, ax?lv:lu, h, ax?lu:lv, color, collide); }
+const WHITE = new THREE.Color(0xffffff);
+STORES.forEach(st=>{
+  const y0 = st.level*FH, col = new THREE.Color(st.color), acc = col.getHex();
+  const pastel = col.clone().lerp(WHITE,.8).getHex();
+  const floorTint = col.clone().lerp(new THREE.Color(0xe6dccb),.82).getHex();
+  const dark = col.clone().lerp(new THREE.Color(0x222222),.25).getHex();
+  lbox(st,-4.25,0,y0+3,3.5,.3,6,WALL,true);
+  lbox(st, 4.25,0,y0+3,3.5,.3,6,WALL,true);
+  lbox(st,0,0,y0+5,5,.3,2,WALL,false);
+  lbox(st,-6,7,y0+3,.3,14,6,pastel,true);
+  lbox(st, 6,7,y0+3,.3,14,6,pastel,true);
+  lbox(st,0,14,y0+3,12,.3,6,pastel,true);
+  lbox(st,0,7,y0+.025,11.7,13.7,.05,floorTint,false);
+  lbox(st,-2.55,0,y0+2,.2,.42,4,acc,false); lbox(st,2.55,0,y0+2,.2,.42,4,acc,false); lbox(st,0,0,y0+4.05,5.3,.42,.12,acc,false);
+  lbox(st,0,13.3,y0+1.3,10,1,2.6,0xffffff,true);
+  lbox(st,0,12.75,y0+.75,9.6,.1,.08,acc,false); lbox(st,0,12.75,y0+1.65,9.6,.1,.08,acc,false);
+  lbox(st,-4,11.6,y0+.55,2.6,1,1.1,dark,true);
+  const tex = textTexture(st.name, st.color, '#ffffff');
+  const rot = Math.atan2(-st.nx,-st.nz);
+  let [sx,sz] = L(st,0,-.17); signPlane(tex,4.8,1.2,sx,y0+5,sz,rot);
+  [sx,sz] = L(st,0,13.82); signPlane(tex,5.4,1.35,sx,y0+4.2,sz,rot);
+  const spots = [[-2.8,4.5],[2.8,4.5],[-2.8,9],[2.8,9]];
   st.items.forEach((it,i)=>{
-    const [dx,dz] = spots[i];
-    const px = s*(6+dx), pz = zc+dz;
-    box(px,.5,pz,1.5,1,1.5,mat(0xffffff,{roughness:.4}),true);
-    box(px,1.02,pz,1.55,.06,1.55,mat(col),false);
-    const g = it.g; let geo, h;
-    if(g[0]==='box'){ geo=new THREE.BoxGeometry(g[1],g[2],g[3]); h=g[2]; }
-    else if(g[0]==='cyl'){ geo=new THREE.CylinderGeometry(g[1],g[1],g[2],28); h=g[2]; }
-    else if(g[0]==='sphere'){ geo=new THREE.SphereGeometry(g[1],28,18); h=g[1]*2; }
-    else if(g[0]==='cone'){ geo=new THREE.ConeGeometry(g[1],g[2],g[3]||28); h=g[2]; }
-    else if(g[0]==='torus'){ geo=new THREE.TorusGeometry(g[1],g[2],14,32,Math.PI); h=g[2]*2; }
-    let mesh;
-    if(g[0]==='plant'){
+    const [u,v] = spots[i]; const [px,pz] = L(st,u,v);
+    lbox(st,u,v,y0+.5,1.4,1.4,1,0xffffff,true);
+    lbox(st,u,v,y0+1.025,1.46,1.46,.05,acc,false);
+    const d=it.d; let geo, h=0, mesh;
+    if(it.sh==='p'){
       mesh = new THREE.Group();
-      const pot = new THREE.Mesh(new THREE.CylinderGeometry(.22,.17,.3,20), mat(0xc9683f)); pot.position.y=.15; mesh.add(pot);
-      const leaf = new THREE.Mesh(new THREE.SphereGeometry(.3,16,12), mat(0x3f9a4f)); leaf.position.y=.5; mesh.add(leaf);
-      mesh.position.set(px,1.05,pz); h=0;
-      mesh.children.forEach(ch=>{ ch.userData.item=it; ch.userData.store=st; ch.userData.root=mesh; clickables.push(ch); });
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(.22,.17,.3,16), new THREE.MeshLambertMaterial({color:0xc9683f})); pot.position.y=.15; mesh.add(pot);
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(.3,14,10), new THREE.MeshLambertMaterial({color:0x3f9a4f})); leaf.position.y=.5; mesh.add(leaf);
+      mesh.position.set(px,y0+1.05,pz); h=.8;
+      mesh.children.forEach(ch=>{ ch.userData={item:it,store:st,root:mesh}; clickables.push(ch); });
     } else {
-      mesh = new THREE.Mesh(geo, mat(it.c,{roughness:.45}));
-      if(g[0]==='cyl' && g[3]==='flat'){ mesh.rotation.z=Math.PI/2; mesh.rotation.y=Math.PI/2; h=g[1]*2; }
-      mesh.position.set(px,1.05+h/2,pz);
-      mesh.userData.item=it; mesh.userData.store=st; mesh.userData.root=mesh; clickables.push(mesh);
+      if(it.sh==='b'){ geo=new THREE.BoxGeometry(d[0],d[1],d[2]); h=d[1]; }
+      else if(it.sh==='c'){ geo=new THREE.CylinderGeometry(d[0],d[0],d[1],22); h=d[1]; }
+      else if(it.sh==='s'){ geo=new THREE.SphereGeometry(d[0],22,14); h=2*d[0]; }
+      else if(it.sh==='k'){ geo=new THREE.ConeGeometry(d[0],d[1],d[2]||22); h=d[1]; }
+      else { geo=new THREE.TorusGeometry(d[0],d[1],10,28); h=2*(d[0]+d[1]); }
+      mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:it.c}));
+      mesh.position.set(px,y0+1.05+h/2,pz);
+      mesh.userData={item:it,store:st,root:mesh}; clickables.push(mesh);
     }
     scene.add(mesh); spinners.push(mesh);
-    const tag = new THREE.Sprite(new THREE.SpriteMaterial({map:textTexture(fmt(it.p),'#1f1b2e','#ffffff',256,96,'700 60px Outfit, system-ui, sans-serif')}));
-    tag.scale.set(.75,.28,1); tag.position.set(px,1.05+(h||.8)+.45,pz); scene.add(tag);
+    const tag = new THREE.Sprite(new THREE.SpriteMaterial({map:textTexture(fmt(it.p),'#1f1b2e','#ffffff',192,80,'700 50px Outfit, system-ui, sans-serif')}));
+    tag.scale.set(.6,.25,1); tag.position.set(px,y0+1.05+h+.4,pz); scene.add(tag);
   });
 });
 
-// Fountain, benches, planters
-const stone = mat(0xd5cab8);
-const basin = new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.4,.6,40), stone); basin.position.set(0,.3,0); scene.add(basin);
-const water = new THREE.Mesh(new THREE.CylinderGeometry(2,2,.05,40), mat(0x6fb6d8,{roughness:.1,metalness:.2})); water.position.set(0,.56,0); scene.add(water);
-const col1 = new THREE.Mesh(new THREE.CylinderGeometry(.25,.35,1.8,20), stone); col1.position.set(0,1.2,0); scene.add(col1);
-const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.8,.3,.3,30), stone); bowl.position.set(0,2.1,0); scene.add(bowl);
-colliders.push({x0:-2.4,x1:2.4,z0:-2.4,z1:2.4});
-const benchMat = mat(0x8a5a3b);
-[[-4.4,-15],[4.4,-15],[-4.4,15],[4.4,15]].forEach(([x,z])=>{ box(x,.45,z,.7,.12,2.4,benchMat,true); box(x,.2,z-1,.6,.4,.15,mat(0x444444),false); box(x,.2,z+1,.6,.4,.15,mat(0x444444),false); });
-[[-4.6,-6],[4.6,-6],[-4.6,6],[4.6,6],[-4.6,-25],[4.6,-25],[-4.6,25],[4.6,25]].forEach(([x,z])=>{
-  box(x,.4,z,1,.8,1,mat(0xb9a88f),true);
-  const t = new THREE.Mesh(new THREE.SphereGeometry(.75,16,12), mat(0x4f9a5a)); t.position.set(x,1.4,z); scene.add(t);
+// ---------------- Atrium: fountain + food court ----------------
+const stone = 0xd5cab8;
+const basin = new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.6,.6,40), new THREE.MeshLambertMaterial({color:stone})); basin.position.set(0,.3,0); scene.add(basin);
+const water = new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.05,40), new THREE.MeshLambertMaterial({color:0x6fb6d8})); water.position.set(0,.56,0); scene.add(water);
+const col1 = new THREE.Mesh(new THREE.CylinderGeometry(.25,.35,1.8,20), new THREE.MeshLambertMaterial({color:stone})); col1.position.set(0,1.2,0); scene.add(col1);
+const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.9,.3,.3,30), new THREE.MeshLambertMaterial({color:stone})); bowl.position.set(0,2.1,0); scene.add(bowl);
+addCol(-2.6,2.6,-2.6,2.6,0,3);
+const umb = [0xd9572b,0x2e8a57,0x2f6fd0,0xe0a21b];
+[[-5,-7],[5,-7],[-5,7],[5,7],[-5,-11.5],[5,-11.5],[-5,11.5],[5,11.5]].forEach(([x,z],i)=>{
+  sbox(x,.75,z,1.2,.08,1.2,0xffffff,true); sbox(x,.37,z,.15,.74,.15,0x555555,false);
+  [[0,-.95],[0,.95],[-.95,0],[.95,0]].forEach(([dx,dz])=>{ sbox(x+dx,.45,z+dz,.5,.08,.5,umb[i%4],false); sbox(x+dx,.22,z+dz,.08,.44,.08,0x555555,false); });
+  const u = new THREE.Mesh(new THREE.ConeGeometry(1.2,.5,8), new THREE.MeshLambertMaterial({color:umb[i%4]})); u.position.set(x,2.45,z); scene.add(u);
+  sbox(x,1.5,z,.06,1.9,.06,0x888888,false);
 });
+const upTex = textTexture('Stairs to Level 2','#1f1b2e','#ffffff');
+signPlane(upTex,3.6,.9, 0,4.6,15.95, Math.PI); signPlane(upTex,3.6,.9, 0,4.6,-15.95, 0);
+const fcTex = textTexture('Food Court','#2e8a57','#ffffff');
+signPlane(fcTex,3.2,.8, 0,3.6,15.95, Math.PI); signPlane(fcTex,3.2,.8, 0,3.6,-15.95, 0);
 
-// ---------- Player ----------
-const player = {x:0, z:26, yaw:0, pitch:-0.05};
+for(let lv=0; lv<2; lv++){
+  const y=lv*FH;
+  [[-14,-18],[14,-18],[-14,18],[14,18]].forEach(([x,z])=>{ sbox(x,y+.45,z,.7,.12,2.4,0x8a5a3b,true); sbox(x,y+.2,z-1,.6,.4,.15,0x444444,false); sbox(x,y+.2,z+1,.6,.4,.15,0x444444,false); });
+  [[-14,-8],[14,-8],[-14,8],[14,8],[-14,-32],[14,-32],[-14,32],[14,32]].forEach(([x,z])=>{
+    sbox(x,y+.4,z,1,.8,1,0xb9a88f,true);
+    const t = new THREE.Mesh(new THREE.SphereGeometry(.7,12,9), new THREE.MeshLambertMaterial({color:0x4f9a5a})); t.position.set(x,y+1.35,z); scene.add(t);
+  });
+}
+[[-7,-20],[7,-20],[-7,20],[7,20]].forEach(([x,z])=>{
+  sbox(x,.45,z,1.8,.9,1.8,0xb9a88f,true);
+  const tr = new THREE.Mesh(new THREE.CylinderGeometry(.15,.2,3,8), new THREE.MeshLambertMaterial({color:0x7a5a3a})); tr.position.set(x,2.2,z); scene.add(tr);
+  const cr = new THREE.Mesh(new THREE.SphereGeometry(1.5,14,10), new THREE.MeshLambertMaterial({color:0x4a9152})); cr.position.set(x,4.2,z); scene.add(cr);
+});
+flushBatches();
+
+// ---------------- Player + physics ----------------
+const player = {x:0, z:-13.5, y:0, vy:0, yaw:Math.PI, pitch:0.1};
 const R = .4;
-function blocked(x,z){ for(const c of colliders){ if(x+R>c.x0 && x-R<c.x1 && z+R>c.z0 && z-R<c.z1) return true; } return false; }
+const lvl = () => player.y > FH/2 ? 1 : 0;
+function inAtrium(x,z){ return x>-10 && x<10 && z>-28 && z<28; }
+function surfaceAt(x,z,y){
+  let best = 0;
+  const cand = h => { if(h<=y+.7 && h>best) best=h; };
+  if(!inAtrium(x,z)) cand(FH);
+  const sh = stairHeight(x,z); if(sh>=0) cand(sh);
+  for(const e of ELEV) if(inCab(e,x,z)) cand(e.y);
+  return best;
+}
+function blocked(x,z){
+  const y0=player.y+.3, y1=player.y+1.8;
+  for(const c of colliders){ if(x+R>c.x0 && x-R<c.x1 && z+R>c.z0 && z-R<c.z1 && y1>c.y0 && y0<c.y1) return true; }
+  for(const e of ELEV){
+    const dx = e.s*10;
+    if(x+R>dx-.1 && x-R<dx+.1 && z+R>-1.5 && z-R<1.5){
+      for(let k=0;k<2;k++){ if((e.moving || Math.abs(e.y-k*FH)>.01) && y1>k*FH && y0<k*FH+FH) return true; }
+    }
+  }
+  return false;
+}
 function move(dx,dz){
   if(!blocked(player.x+dx, player.z)) player.x+=dx;
   if(!blocked(player.x, player.z+dz)) player.z+=dz;
 }
 
 const keys = {};
-addEventListener('keydown', e=>{ if(e.target.closest && e.target.closest('#card a,button')) return; keys[e.code]=true; if(e.code==='Escape') closeCard(); });
+let curAction = null;
+addEventListener('keydown', e=>{
+  if(e.target.closest && e.target.closest('#card a,button')) return;
+  keys[e.code]=true;
+  if(e.code==='Escape'){ closeCard(); toggleDir(false); }
+  if(e.code==='KeyE' && curAction) curAction.run();
+});
 addEventListener('keyup', e=>{ keys[e.code]=false; });
 addEventListener('blur', ()=>{ for(const k in keys) keys[k]=false; });
 
-// ---------- Pointer ----------
+// ---------------- Pointer ----------------
 const ray = new THREE.Raycaster(); ray.far = 14;
 const ndc = new THREE.Vector2();
 function pick(cx,cy){
@@ -300,7 +459,7 @@ canvas.addEventListener('pointerdown', e=>{
   const touchMove = e.pointerType==='touch' && e.clientX < innerWidth/2 && e.clientY > innerHeight*.35;
   pointers.set(e.pointerId, {sx:e.clientX, sy:e.clientY, lx:e.clientX, ly:e.clientY, t:performance.now(), mode: touchMove?'stick':'look', moved:0});
   if(touchMove){ stickEl.style.left=e.clientX+'px'; stickEl.style.top=e.clientY+'px'; stickEl.hidden=false; }
-  canvas.setPointerCapture(e.pointerId);
+  try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
 });
 canvas.addEventListener('pointermove', e=>{
   const p = pointers.get(e.pointerId);
@@ -312,8 +471,8 @@ canvas.addEventListener('pointermove', e=>{
     player.yaw -= dx*k; player.pitch = Math.max(-1.2, Math.min(1.2, player.pitch - dy*k));
     hideTip();
   } else {
-    let vx=e.clientX-p.sx, vy=e.clientY-p.sy; const L=Math.hypot(vx,vy), m=45;
-    if(L>m){ vx*=m/L; vy*=m/L; }
+    let vx=e.clientX-p.sx, vy=e.clientY-p.sy; const Ln=Math.hypot(vx,vy), m=45;
+    if(Ln>m){ vx*=m/Ln; vy*=m/Ln; }
     knob.style.transform=`translate(${vx}px,${vy}px)`;
     stickVec={x:vx/m, y:vy/m};
   }
@@ -347,76 +506,131 @@ function hover(x,y){
 function hideTip(){ tip.hidden=true; }
 canvas.addEventListener('pointerleave', ()=>{ hideTip(); setHover(null); });
 
-// ---------- Card ----------
+// ---------------- Card ----------------
 const card = document.getElementById('card');
 function openCard(it, st){
-  document.getElementById('cardStore').textContent = st.name;
-  document.getElementById('cardStore').style.color = st.color;
+  const cs = document.getElementById('cardStore');
+  cs.textContent = st.name+' · Level '+(st.level+1); cs.style.color = st.color;
   document.getElementById('cardName').textContent = it.n;
   document.getElementById('cardPrice').textContent = fmt(it.p);
-  document.getElementById('cardDesc').textContent = it.d;
+  document.getElementById('cardDesc').textContent = st.tag+' at '+st.name+', on Level '+(st.level+1)+' of Lantern Court.';
   const a = document.getElementById('cardLink');
-  a.href = 'https://www.amazon.com/s?k='+encodeURIComponent(it.q);
+  a.href = 'https://www.amazon.com/s?k='+encodeURIComponent(it.n);
   a.style.background = st.color;
   card.hidden = false; hideTip();
 }
 function closeCard(){ card.hidden = true; }
 document.getElementById('close').addEventListener('click', ()=>{ closeCard(); canvas.focus(); });
 
-// ---------- Directory ----------
+// ---------------- Directory ----------------
 const dir = document.getElementById('dir'), dirBtn = document.getElementById('dirBtn');
-const list = document.getElementById('dirList');
-STORES.forEach(st=>{
-  const li=document.createElement('li'); const b=document.createElement('button'); b.className='go';
-  b.innerHTML = `<span class="sw" style="background:${st.color}"></span><span></span><small></small>`;
-  b.children[1].textContent = st.name; b.children[2].textContent = st.tag;
-  b.addEventListener('click', ()=>{ player.x = st.side*3.2; player.z = st.zc; player.yaw = -st.side*Math.PI/2; player.pitch=-0.05; toggleDir(false); closeCard(); canvas.focus(); });
-  li.appendChild(b); list.appendChild(li);
+[0,1].forEach(lv=>{
+  const h=document.createElement('h3'); h.textContent='Level '+(lv+1); dir.appendChild(h);
+  const ul=document.createElement('ul'); dir.appendChild(ul);
+  STORES.filter(s=>s.level===lv).slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(st=>{
+    const li=document.createElement('li'); const b=document.createElement('button'); b.className='go';
+    b.innerHTML = '<span class="sw"></span><span></span><small></small>';
+    b.children[0].style.background = st.color; b.children[1].textContent = st.name; b.children[2].textContent = st.tag;
+    b.addEventListener('click', ()=>{
+      player.x = st.fx - st.nx*3; player.z = st.fz - st.nz*3; player.y = st.level*FH; player.vy=0;
+      player.yaw = Math.atan2(-st.nx,-st.nz); player.pitch=-0.05;
+      toggleDir(false); closeCard(); canvas.focus();
+    });
+    li.appendChild(b); ul.appendChild(li);
+  });
 });
 function toggleDir(v){ dir.hidden = !v; dirBtn.setAttribute('aria-expanded', String(v)); }
 dirBtn.addEventListener('click', ()=> toggleDir(dir.hidden));
 
-// ---------- Minimap ----------
+// ---------------- Elevator action button ----------------
+const actBtn = document.getElementById('act');
+let lastActKey = '';
+actBtn.addEventListener('click', ()=>{ if(curAction) curAction.run(); canvas.focus(); });
+function sendElev(e, y){ if(e.moving || Math.abs(e.y-y)<.01) return; e.target=y; e.moving=true; }
+function nearDoor(e){ return Math.abs(player.x-e.s*11.2)<1.8 && Math.abs(player.z)<2.2; }
+function updateAction(){
+  let a = null;
+  const L0 = lvl();
+  for(const e of ELEV){
+    if(e.moving && (inCab(e,player.x,player.z) || nearDoor(e))){ a={key:'mv',label:'Elevator moving…',disabled:true}; break; }
+    if(!e.moving && inCab(e,player.x,player.z) && Math.abs(player.y-e.y)<.3){
+      const to = e.y<FH/2 ? FH : 0;
+      a={key:'ride'+e.s+to,label:'Ride to Level '+(to?2:1),run:()=>sendElev(e,to)}; break;
+    }
+    if(!e.moving && nearDoor(e) && Math.abs(e.y-L0*FH)>.01){
+      a={key:'call'+e.s+L0,label:'Call elevator',run:()=>sendElev(e,L0*FH)}; break;
+    }
+  }
+  curAction = a && !a.disabled ? a : null;
+  const k = a ? a.key : '';
+  if(k!==lastActKey){
+    lastActKey=k;
+    if(!a){ actBtn.hidden=true; }
+    else {
+      actBtn.hidden=false; actBtn.disabled=!!a.disabled; actBtn.textContent=a.label;
+      if(!a.disabled && !coarse){ const kb=document.createElement('kbd'); kb.textContent='E'; actBtn.appendChild(kb); }
+    }
+  }
+}
+
+// ---------------- Minimap ----------------
 const map = document.getElementById('map'), mg = map.getContext('2d');
 function drawMap(){
-  const W=map.width, H=map.height, pad=12, sx=(W-2*pad)/44, sz=(H-2*pad)/60;
-  const X = x=> pad+(x+22)*sx, Z = z=> pad+(z+30)*sz;
+  const W=map.width, H=map.height, pad=10, s=Math.min((W-2*pad)/64,(H-2*pad)/100);
+  const ox=(W-64*s)/2, oz=(H-100*s)/2;
+  const X = x=> ox+(x+32)*s, Z = z=> oz+(z+50)*s;
+  const lv = lvl();
   mg.clearRect(0,0,W,H);
-  mg.fillStyle='#efe6d8'; mg.fillRect(X(-6),Z(-30),12*sx,60*sz);
+  mg.fillStyle='#efe6d8'; mg.fillRect(X(-18),Z(-36),36*s,72*s);
+  if(lv===1){ mg.fillStyle='#dcefff'; mg.fillRect(X(-10),Z(-28),20*s,56*s); }
+  else { mg.fillStyle='#e4dccd'; mg.fillRect(X(-10),Z(-28),20*s,56*s); mg.fillStyle='#6fb6d8'; mg.beginPath(); mg.arc(X(0),Z(0),2.4*s,0,7); mg.fill(); }
+  mg.fillStyle='#bfb19a'; mg.fillRect(X(-3),Z(16),6*s,12*s); mg.fillRect(X(-3),Z(-28),6*s,12*s);
+  mg.fillStyle='#5d6470'; ELEV.forEach(e=>mg.fillRect(X(Math.min(e.s*7,e.s*10)),Z(-1.5),3*s,3*s));
   STORES.forEach(st=>{
-    const x0 = st.side<0 ? -22 : 6;
-    mg.fillStyle = st.color+'33'; mg.fillRect(X(x0),Z(st.zc-10),16*sx,20*sz);
-    mg.strokeStyle = st.color; mg.lineWidth=2; mg.strokeRect(X(x0)+1,Z(st.zc-10)+1,16*sx-2,20*sz-2);
+    if(st.level!==lv) return;
+    const a=L(st,-6,0), b=L(st,6,14);
+    const x0=Math.min(a[0],b[0]), x1=Math.max(a[0],b[0]), z0=Math.min(a[1],b[1]), z1=Math.max(a[1],b[1]);
+    mg.fillStyle = st.color+'40'; mg.fillRect(X(x0),Z(z0),(x1-x0)*s,(z1-z0)*s);
+    mg.strokeStyle = st.color; mg.lineWidth=1.5; mg.strokeRect(X(x0)+1,Z(z0)+1,(x1-x0)*s-2,(z1-z0)*s-2);
   });
-  mg.fillStyle='#6fb6d8'; mg.beginPath(); mg.arc(X(0),Z(0),2.2*sx,0,7); mg.fill();
   const px=X(player.x), pz=Z(player.z);
-  const fx=-Math.sin(player.yaw), fz=-Math.cos(player.yaw);
-  mg.fillStyle='rgba(217,87,43,.25)'; mg.beginPath(); mg.moveTo(px,pz);
-  mg.arc(px,pz,26,Math.atan2(fz,fx)-.5,Math.atan2(fz,fx)+.5); mg.closePath(); mg.fill();
-  mg.fillStyle='#1f1b2e'; mg.beginPath(); mg.arc(px,pz,6,0,7); mg.fill();
-  mg.strokeStyle='#fff'; mg.lineWidth=2; mg.stroke();
+  const fx=-Math.sin(player.yaw), fz=-Math.cos(player.yaw), an=Math.atan2(fz,fx);
+  mg.fillStyle='rgba(217,87,43,.3)'; mg.beginPath(); mg.moveTo(px,pz); mg.arc(px,pz,22,an-.5,an+.5); mg.closePath(); mg.fill();
+  mg.fillStyle='#1f1b2e'; mg.beginPath(); mg.arc(px,pz,5,0,7); mg.fill(); mg.strokeStyle='#fff'; mg.lineWidth=2; mg.stroke();
 }
 
-// ---------- Where am I ----------
-const where = document.getElementById('where');
-let lastWhere = '';
+// ---------------- HUD: level + where ----------------
+const where = document.getElementById('where'), levelChip = document.getElementById('level');
+let lastWhere='', lastLvl=-1;
 function updateWhere(){
-  let txt = '';
-  if(Math.abs(player.x)>6.2){ const st = STORES.find(s=> s.side===Math.sign(player.x) && Math.abs(player.z-s.zc)<10); if(st) txt = 'In '+st.name; }
+  const lv = lvl();
+  if(lv!==lastLvl){ lastLvl=lv; levelChip.textContent='Level '+(lv+1); }
+  let txt='';
+  for(const st of STORES){
+    if(st.level!==lv) continue;
+    const dx=player.x-st.fx, dz=player.z-st.fz, v=dx*st.nx+dz*st.nz, u=dx*st.tx+dz*st.tz;
+    if(v>0.2 && v<14 && Math.abs(u)<6){ txt='In '+st.name; break; }
+  }
+  if(!txt && lv===0 && inAtrium(player.x,player.z) && Math.abs(player.z)<14) txt='Food Court';
   if(txt!==lastWhere){ lastWhere=txt; where.hidden=!txt; where.textContent=txt; }
 }
+if(coarse) document.getElementById('help').textContent = 'Left thumb to walk · drag right side to look · tap a product';
 
-// ---------- Help text for touch ----------
-if(matchMedia('(pointer: coarse)').matches){
-  document.getElementById('help').textContent = 'Left thumb to walk · drag right side to look · tap a product';
-}
-
-// ---------- Loop ----------
+// ---------------- Loop ----------------
 function resize(){ const w=innerWidth, h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 let last = performance.now(), t = 0;
-function frame(now){
-  const dt = Math.min(.05,(now-last)/1000); last=now; t+=dt;
+function step(dt){
+  t+=dt;
+  for(const e of ELEV){
+    if(e.moving){
+      const riding = inCab(e,player.x,player.z) && Math.abs(player.y-e.y)<.5;
+      const st = 2.6*dt*Math.sign(e.target-e.y);
+      if(Math.abs(e.target-e.y)<=Math.abs(st)){ e.y=e.target; e.moving=false; } else e.y+=st;
+      if(riding){ player.y=e.y; player.vy=0; }
+    }
+    e.mesh.position.y = e.y;
+  }
   let f=0, r=0;
   if(keys.KeyW||keys.ArrowUp) f+=1; if(keys.KeyS||keys.ArrowDown) f-=1;
   if(keys.KeyD) r+=1; if(keys.KeyA) r-=1;
@@ -429,14 +643,22 @@ function frame(now){
     const sy=Math.sin(player.yaw), cy=Math.cos(player.yaw);
     move((-sy*f + cy*r)*sp, (-cy*f - sy*r)*sp);
   }
-  camera.position.set(player.x, 1.65 + (len>.05 ? Math.sin(t*9)*.03 : 0), player.z);
+  const ground = surfaceAt(player.x, player.z, player.y);
+  if(player.y > ground + .02){ player.vy -= 22*dt; player.y += player.vy*dt; if(player.y<=ground){ player.y=ground; player.vy=0; } }
+  else { player.y = ground; player.vy = 0; }
+  camera.position.set(player.x, player.y + 1.65 + (len>.05 ? Math.sin(t*9)*.03 : 0), player.z);
   camera.rotation.set(player.pitch, player.yaw, 0);
-  if(!reduceMotion) spinners.forEach((m,i)=>{ m.rotation.y += dt*.6; });
-  water.position.y = .56 + (reduceMotion?0:Math.sin(t*2)*.01);
+  if(!reduceMotion) for(const m of spinners) m.rotation.y += dt*.6;
+}
+function frame(now){
+  const dt = Math.min(.05,(now-last)/1000); last=now;
+  step(dt);
   renderer.render(scene,camera);
-  drawMap(); updateWhere();
+  drawMap(); updateWhere(); updateAction();
   requestAnimationFrame(frame);
 }
+// test hook: lets an automated check drive the player and render a frame
+window.__mall = {player, ELEV, keys, sendElev, step, render:()=>{ renderer.render(scene,camera); drawMap(); updateWhere(); updateAction(); }};
 document.getElementById('loading').hidden = true;
 canvas.style.cursor='grab';
 requestAnimationFrame(frame);
