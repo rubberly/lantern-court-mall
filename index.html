@@ -163,7 +163,7 @@ body.coaching #sbar{z-index:12}
   <div class="price" id="cardPrice"></div>
   <p id="cardDesc"></p>
   <a id="cardLink" href="#" target="_blank" rel="noopener">Find one online</a>
-  <small>Example prices. The button opens a product search.</small>
+  <small id="cardNote">Example prices. The button opens a product search.</small>
 </div>
 
 <div id="coach" hidden role="dialog" aria-labelledby="cTitle">
@@ -263,7 +263,7 @@ const RAW_UPPER = [
 ];
 const FH = 6, NLV = 3;
 const LEVEL_NAMES = ['Garden Level','Main Level','Upper Level'];
-const LEVEL_BLURB = ['Garden Level · turf, fountain and 7 big shops','Main Level · food court, holiday tree and 24 shops','Upper Level · skylight views and 24 shops'];
+const LEVEL_BLURB = ['Garden Level · food court, turf, fountain and 7 big shops','Main Level · café tables, holiday tree and 24 shops','Upper Level · skylight views and 24 shops'];
 function ringSlots(){
   const a=[];
   for(let k=0;k<8;k++){ const z=-31.5+9*k; a.push({fx:-18,fz:z,nx:-1,nz:0,hw:4.5}); a.push({fx:18,fz:z,nx:1,nz:0,hw:4.5}); }
@@ -282,6 +282,16 @@ function addStores(raw, slots, level){
   });
 }
 addStores(RAW_GARDEN, GARDEN_SLOTS, 0);
+// Food court: six counter-service restaurants set into the Garden Level's south wall (original names, realistic menus)
+const RAW_FOOD = [
+ ['Ember & Bun','Burgers','#d9572b','Classic cheeseburger|8.49|c|.22,.16|c9813f','Bacon smash burger|10.99|c|.24,.2|a8632f','Crispy fries|3.49|b|.18,.26,.12|f2c230','Chocolate shake|4.99|c|.1,.32|6b3e26'],
+ ['Golden Wok','Chinese','#c0392b','Orange chicken plate|10.49|c|.26,.1|e07a2c','Beef & broccoli|11.29|c|.26,.1|4f7a3a','Chow mein|8.99|b|.2,.22,.2|f4efe6','Egg rolls (2)|3.99|b|.26,.08,.12|d9a35a'],
+ ['Casa Verde Taqueria','Mexican','#2e8a57','Carne asada burrito|11.49|b|.34,.12,.14|e8d5a8','Chicken tacos (3)|9.99|k|.16,.2,3|f2c230','Chips & guacamole|5.49|c|.2,.1|7cb342','Horchata|3.29|c|.1,.3|f7f1e3'],
+ ['Slice Society','Pizza','#e0a21b','Pepperoni slice|4.25|k|.26,.05,3|d9572b','Margherita slice|3.95|k|.26,.05,3|f2e3c7','Garlic knots|4.49|s|.12|e0b97a','Caesar salad|6.99|c|.22,.12|8bc34a'],
+ ['Sakura Bowl','Japanese','#e5487a','Chicken teriyaki bowl|11.99|c|.24,.14|8b4a2b','Salmon poke bowl|13.49|c|.24,.14|f28b6b','California roll|7.99|b|.3,.08,.12|f4f4f4','Miso soup|2.99|c|.14,.12|c98b4a'],
+ ['Crisp Coop','Chicken','#f2a23a','3-piece tenders|8.99|b|.24,.12,.16|e0a050','Spicy chicken sandwich|7.99|c|.2,.16|d9822a','Mac & cheese|3.99|c|.14,.12|f2c230','Fresh lemonade|2.99|c|.1,.3|fff176']
+];
+addStores(RAW_FOOD, [-15,-9,-3,3,9,15].map(x=>({fx:x,fz:-36,nx:0,nz:-1,hw:3,food:true,depth:6})), 0);
 addStores(RAW_MAIN, ringSlots(), 1);
 addStores(RAW_UPPER, ringSlots(), 2);
 
@@ -484,10 +494,65 @@ function inCab(e,x,z){ const lo=Math.min(e.s*7,e.s*10), hi=Math.max(e.s*7,e.s*10
 
 // ================= Shops =================
 const clickables = [], spinners = [];
-const fmt = n => '$'+n;
+const fmt = n => '$'+(Number.isInteger(n) ? n : n.toFixed(2));
 function L(sh,u,v){ return [sh.fx + sh.tx*u + sh.nx*v, sh.fz + sh.tz*u + sh.nz*v]; }
 function lbox(sh,u,v,yc,lu,lv,h,color,collide,mode){ const [x,z]=L(sh,u,v); const ax=sh.nx!==0; sbox(x,yc,z, ax?lv:lu, h, ax?lu:lv, color, collide, mode); }
+// staff figure (also used behind restaurant counters)
+function staffFigure(x,y,z,rotY,shirt,cap){
+  const g=new THREE.Group();
+  const b=new THREE.Mesh(new THREE.CylinderGeometry(.2,.26,.78,10), new THREE.MeshLambertMaterial({color:shirt})); b.position.y=1.17; g.add(b);
+  const h=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10), new THREE.MeshLambertMaterial({color:[0xf1c9a5,0xd9a37c,0xa86e47,0x7a4a2c][Math.floor(Math.random()*4)]})); h.position.y=1.72; g.add(h);
+  const c=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.1,12), new THREE.MeshLambertMaterial({color:cap})); c.position.y=1.86; g.add(c);
+  const ap=new THREE.Mesh(new THREE.BoxGeometry(.34,.5,.04), new THREE.MeshLambertMaterial({color:0xffffff})); ap.position.set(0,1.05,.24); g.add(ap);
+  g.position.set(x,y,z); g.rotation.y=rotY; scene.add(g); return g;
+}
+function menuTex(st){
+  const cv=document.createElement('canvas'); cv.width=768; cv.height=256; const g=cv.getContext('2d');
+  g.fillStyle='#1d1f24'; g.fillRect(0,0,768,256);
+  g.fillStyle=st.color; g.fillRect(0,0,768,10);
+  g.fillStyle='#ffffff'; g.font='700 30px Outfit, system-ui, sans-serif'; g.textBaseline='middle'; g.fillText('MENU',30,44);
+  g.fillStyle='rgba(255,255,255,.55)'; g.font='500 20px Inter, system-ui, sans-serif'; g.fillText(st.tag,130,46);
+  st.items.forEach((it,i)=>{ const x=30+(i%2)*370, y=110+Math.floor(i/2)*70;
+    g.fillStyle='#ffffff'; g.font='600 26px Inter, system-ui, sans-serif'; fitText(g,it.n,g.font,250); g.fillText(it.n,x,y);
+    g.fillStyle=st.color; g.font='700 26px Outfit, system-ui, sans-serif'; g.textAlign='right'; g.fillText('$'+it.p.toFixed(2),x+340,y); g.textAlign='left'; });
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; t.anisotropy=4; return t;
+}
+function buildStall(st){
+  const y0=st.level*FH, hw=st.hw, D=st.depth, col=new THREE.Color(st.color), acc=col.getHex();
+  const tile = col.clone().lerp(WHITE,.7).getHex();
+  lbox(st,-hw,D/2,y0+3,.3,D,6,WALL,true); lbox(st,hw,D/2,y0+3,.3,D,6,WALL,true);
+  lbox(st,0,D,y0+3,2*hw,.3,6,tile,true);
+  lbox(st,0,D/2,y0+.025,2*hw-.3,D-.3,.05,0x3a3d45,false);
+  lbox(st,0,D/2,y0+5.65,2*hw-.6,D-.6,.04,LED,false,'e');
+  lbox(st,0,0,y0+4.95,2*hw,.36,1.5,CHAR,false);
+  lbox(st,0,-.2,y0+4.17,2*hw-.3,.05,.05,acc,false,'e');
+  // order counter across the front, steel back counter, pendant lights
+  lbox(st,0,1.2,y0+.52,2*hw-.6,.8,1.04,CHAR,true);
+  lbox(st,0,1.2,y0+1.07,2*hw-.4,.95,.06,0xf3efe8,false);
+  lbox(st,0,.78,y0+.62,2*hw-.6,.03,.14,acc,false,'e');
+  lbox(st,0,D-.7,y0+.5,2*hw-.8,.8,1,STEEL,false);
+  [-1.2,1.2].forEach(u=>{ lbox(st,u,1.3,y0+4.4,.03,.03,1.2,CHAR,false); lbox(st,u,1.3,y0+3.75,.34,.34,.16,0xfff3d6,false,'e'); });
+  const sx=L(st,0,-.2); signPlane(shopSignTex(st.name,st.color),Math.min(2*hw-.8,5.2),1.05,sx[0],y0+4.95,sx[1],Math.atan2(-st.nx,-st.nz));
+  const mb=L(st,0,D-.17); signPlane(menuTex(st),4.8,1.6,mb[0],y0+3.3,mb[1],Math.atan2(-st.nx,-st.nz));
+  const cp=L(st,(Math.random()<.5?-1:1)*1,2.6); staffFigure(cp[0],y0,cp[1],Math.atan2(-st.nx,-st.nz),acc,0xffffff);
+  [-1.8,-.6,.6,1.8].forEach((u,i)=>{
+    const it=st.items[i]; if(!it) return; const [px,pz]=L(st,u,1.2), v=1.2;
+    it.u=u; it.v=v; it.i=i; it.st=st;
+    const d=it.d; let geo, h;
+    if(it.sh==='b'){ geo=new THREE.BoxGeometry(d[0],d[1],d[2]); h=d[1]; }
+    else if(it.sh==='c'){ geo=new THREE.CylinderGeometry(d[0],d[0]*.85,d[1],22); h=d[1]; }
+    else if(it.sh==='s'){ geo=new THREE.SphereGeometry(d[0],18,12); h=2*d[0]; }
+    else { geo=new THREE.ConeGeometry(d[0],d[1],d[2]||22); h=d[1]; }
+    const mesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:it.c}));
+    mesh.position.set(px,y0+1.1+h/2,pz); if(it.sh==='k' && d[2]===3) mesh.rotation.y=Math.PI/6;
+    mesh.userData={item:it,store:st,root:mesh}; clickables.push(mesh); scene.add(mesh);
+    it.mesh=mesh; it.topY=y0+1.1+h;
+    const tag=new THREE.Sprite(new THREE.SpriteMaterial({map:textTexture('$'+it.p.toFixed(2),'#202227','#ffffff',192,80,'700 46px Outfit, system-ui, sans-serif')}));
+    tag.scale.set(.5,.21,1); tag.position.set(px,it.topY+.3,pz); scene.add(tag);
+  });
+}
 STORES.forEach(st=>{
+  if(st.food) return buildStall(st);
   const y0 = st.level*FH, hw = st.hw, dw = hw>5 ? 2.5 : 2;
   const col = new THREE.Color(st.color), acc = col.getHex();
   const feature = col.clone().lerp(WHITE,.62).getHex();
@@ -548,10 +613,15 @@ STORES.forEach(st=>{
   if(z1-z0>8) sbox(x-Math.sign(x)*.2,2.6,(z0+z1)/2,.15,3.6,z1-z0-2,0x4f8f4a,false);
 });
 [[-18,-6],[6,18]].forEach(([x0,x1])=>{ sbox((x0+x1)/2,3,36,x1-x0,6,.3,WALL,true); sbox((x0+x1)/2,2.6,35.8,x1-x0-2,3.6,.15,0x4f8f4a,false); });
-sbox(0,3,-36,36,6,.3,WALL,true);
-sbox(0,2.6,-35.8,30,3.6,.15,0x4f8f4a,false);
-const gardenTex = textTexture('Garden Level','#2e7d4a','#ffffff',512,128);
-signPlane(gardenTex,6,1.5,0,4.3,-35.7,0);
+const fcHangTex = textTexture('Food Court','#202227','#ffffff',512,128);
+signPlane(fcHangTex,5,1.25,0,4.75,-29.5,0); sbox(-1.8,5.25,-29.5,.03,.9,.03,CHAR,false); sbox(1.8,5.25,-29.5,.03,.9,.03,CHAR,false);
+// dining tables on the south lawn
+const chairCols=[0xe4572e,0x2f6fd0,0x2e8a57,0xe0a21b];
+function diningTable(x,y,z,i){
+  sbox(x,y+.75,z,1.3,.06,1.3,0xffffff,true); sbox(x,y+.37,z,.12,.74,.12,CHAR,false);
+  [[0,-1],[0,1],[-1,0],[1,0]].forEach(([dx,dz])=>{ sbox(x+dx,y+.46,z+dz,.46,.06,.46,chairCols[i%4],false); sbox(x+dx*1.21,y+.74,z+dz*1.21,dx?.06:.46,.5,dx?.46:.06,chairCols[i%4],false); sbox(x+dx,y+.22,z+dz,.06,.44,.06,CHAR,false); });
+}
+let ti=0; for(const z of [-20,-26]) for(const x of [-10,-5,0,5,10]) diningTable(x,0,z,ti++);
 
 // ================= Garden Level: fountain, benches, trees =================
 const stoneMat = new THREE.MeshLambertMaterial({color:0xdcd8d0});
@@ -581,7 +651,7 @@ function planter(x,y,z){
   sbox(x,y+.4,z,1,.8,1,CHAR,true);
   const t = new THREE.Mesh(new THREE.SphereGeometry(.62,12,9), new THREE.MeshLambertMaterial({color:0x58a05a})); t.position.set(x,y+1.25,z); scene.add(t);
 }
-[[-7.5,-26],[7.5,-26],[-7.5,-18],[7.5,-18],[-7.5,18],[7.5,18]].forEach(([x,z])=>bench(x,0,z,true));
+[[-7.5,18],[7.5,18],[-7.5,27],[7.5,27]].forEach(([x,z])=>bench(x,0,z,true));
 [[-11,-6],[11,-6],[-11,6],[11,6]].forEach(([x,z])=>bench(x,0,z,false));
 [[-11,-14],[11,-14],[-11,14],[11,14],[-11,-30],[11,-30],[-11,30],[11,30]].forEach(([x,z])=>tree(x,0,z,false));
 
@@ -610,7 +680,7 @@ const xmasLights = (function(){
   [[1.5,.9,0xc0392b],[-1.4,1.1,0x2f6fd0],[.4,-1.6,0xe0a21b],[-.6,1.6,0x2e8a57],[1.1,-1.2,0x8e44ad]].forEach(([x,z,c])=>sbox(x*1.15,FH+.25,z*1.15,.55,.5,.55,c,false));
   return pts;
 })();
-const fcTex = textTexture('Food Court','#2e7d4a','#ffffff');
+const fcTex = textTexture('Food Court downstairs','#2e7d4a','#ffffff');
 signPlane(fcTex,3.4,.85, 0,FH+4.4,15.95, Math.PI); signPlane(fcTex,3.4,.85, 0,FH+4.4,-15.95, 0);
 const downTex = textTexture('Stairs down to the Garden','#202227','#ffffff');
 signPlane(downTex,3.4,.85, 0,FH+3.3,15.95, Math.PI); signPlane(downTex,3.4,.85, 0,FH+3.3,-15.95, 0);
@@ -622,7 +692,7 @@ function bannerTex(lines, bg){
   lines.forEach((l,i)=>{ g.font=(i===0?'800 54px ':'600 30px ')+'Outfit, system-ui, sans-serif'; fitText(g,l,g.font,220); g.fillText(l,128,150+i*(i===0?0:70)+(i>0?90:0)); });
   const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; return t;
 }
-const banners = [bannerTex(['Find it','Type it in','the search bar','up top'],'#e4572e'), bannerTex(['Holidays','55 shops','3 levels','1 tree'],'#2e7d4a'), bannerTex(['Garden','Turf, fountain','and benches','downstairs'],'#2f6fd0')];
+const banners = [bannerTex(['Find it','Type it in','the search bar','up top'],'#e4572e'), bannerTex(['Holidays','55 shops','3 levels','1 tree'],'#2e7d4a'), bannerTex(['Hungry?','6 restaurants','in the food court','downstairs'],'#2f6fd0')];
 [[-9.6,-12,0],[9.6,-12,1],[-9.6,12,2],[9.6,12,0],[-9.6,-22,1],[9.6,22,2]].forEach(([x,z,k])=>{
   const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7,5.1), new THREE.MeshBasicMaterial({map:banners[k], side:THREE.DoubleSide}));
   m.position.set(x,2*FH+3.2,z); m.rotation.y = x<0 ? Math.PI/2 : -Math.PI/2; scene.add(m);
@@ -638,6 +708,8 @@ for(let lv=1; lv<NLV; lv++){
 // ================= Ad billboards (digital poster screens) =================
 // Shop ads link to the shop. Outside "sponsors" are made-up example brands, labelled as such.
 const ADS = [
+ {shop:'Ember & Bun', head:'Smashed to order.', sub:'Bacon smash burger $10.99', bg:'#2a1d17', ac:'#ff8a3d', art:'rays'},
+ {shop:'Slice Society', head:'A slice for every craving.', sub:'Pepperoni slice $4.25', bg:'#a52f22', ac:'#ffd166', art:'dots'},
  {shop:'Sound Shack', head:'Hear every detail.', sub:'Over-ear headphones from $79', bg:'#2b2f3d', ac:'#ff7a4d', art:'rings'},
  {shop:'Scoops Ice Cream', head:'Two scoops. Zero regrets.', sub:'Waffle cones from $4', bg:'#e8689a', ac:'#fff3c4', art:'dots'},
  {shop:'Byte Electronics', head:'Big screens. Small prices.', sub:'Smart TVs from $299', bg:'#23439a', ac:'#7fd3ff', art:'bars'},
@@ -706,7 +778,6 @@ function billboard(x,y,z,nx,nz,double){
 }
 for(let lv=1; lv<NLV; lv++) [-1,1].forEach(s=>[-27,-9,9,27].forEach(z=>billboard(s*17.55,lv*FH,z,-s,0,false)));
 [-1,1].forEach(s=>[-12,12].forEach(z=>billboard(s*17.45,0,z,-s,0,false)));
-billboard(-10,0,-35.45,0,1,false); billboard(10,0,-35.45,0,1,false);
 [[-8.5,-24],[8.5,-24],[-8.5,24],[8.5,24]].forEach(([x,z])=>billboard(x,FH,z,0,1,true));
 function updateAds(t){
   for(const bb of BOARDS){ if(t>=bb.next){ bb.idx=(bb.idx+1)%ADS.length; bb.next=t+8; bb.meshes.forEach(m=>{ m.material.map=ADS[bb.idx].tex; }); } }
@@ -889,9 +960,12 @@ function openCard(it, st){
   document.getElementById('cardName').textContent = it.n;
   document.getElementById('cardPrice').textContent = fmt(it.p);
   document.getElementById('cardDesc').textContent = st.tag+' at '+st.name+', on the '+LEVEL_NAMES[st.level]+' of Lantern Court.';
-  const a = document.getElementById('cardLink');
+  const a = document.getElementById('cardLink'), note = document.getElementById('cardNote');
   a.href = 'https://www.amazon.com/s?k='+encodeURIComponent(it.n);
   a.style.background = st.color;
+  a.hidden = !!st.food;
+  if(st.food) document.getElementById('cardDesc').textContent = st.tag+' at '+st.name+', in the Garden Level food court.';
+  note.textContent = st.food ? 'Example menu and prices. Order at the counter.' : 'Example prices. The button opens a product search.';
   card.hidden = false; hideTip();
 }
 function closeCard(){ card.hidden = true; }
@@ -945,6 +1019,9 @@ function updateAction(){
 
 // ================= Search =================
 const KW = {
+ 'Ember & Bun':'food burger burgers fries shake lunch dinner hungry eat meal restaurant american','Golden Wok':'food chinese noodles rice lunch dinner hungry eat meal restaurant asian',
+ 'Casa Verde Taqueria':'food mexican tacos burrito lunch dinner hungry eat meal restaurant','Slice Society':'food pizza italian lunch dinner hungry eat meal restaurant',
+ 'Sakura Bowl':'food japanese sushi bowl lunch dinner hungry eat meal restaurant asian healthy','Crisp Coop':'food chicken tenders sandwich lunch dinner hungry eat meal restaurant',
  'Fresh Market':'grocery food fruit flowers snack healthy','Lantern Cinema':'movies movie film popcorn date night fun','Buddy Workshop':'plush stuffed animal teddy kid build',
  'Turf & Track':'sports soccer football athlete team kid teen','Nest Furniture':'furniture home room decor cozy housewarming adult','Scoops Ice Cream':'ice cream dessert treat sweet kid',
  'Byte Electronics':'electronics tech computer laptop tv tablet console gamer adult teen',
@@ -971,7 +1048,8 @@ const ISYN = {earbuds:'headphones audio', headset:'headphones audio', headphones
   helmet:'safety', puzzle:'brain', chess:'strategy brain', drone:'flying tech', guitar:'music', ukulele:'music', piano:'music',
   basketball:'ball', soccer:'ball', lotion:'skincare', bombs:'spa', towel:'spa', jeans:'pants', beanie:'hat winter', cap:'hat',
   croissant:'pastry', cupcake:'dessert', cookie:'dessert', fudge:'dessert', chocolate:'dessert', tv:'television screen', laptop:'computer',
-  popcorn:'snack', cleats:'shoes soccer', jersey:'shirt soccer', skateboard:'skate', telescope:'space science', slippers:'cozy', hoodie:'cozy sweatshirt'};
+  popcorn:'snack', slice:'pizza', roll:'sushi', tenders:'chicken', shake:'drink dessert milkshake', horchata:'drink', lemonade:'drink', soup:'soup',
+  cheeseburger:'burger', fries:'side', knots:'bread', cleats:'shoes soccer', jersey:'shirt soccer', skateboard:'skate', telescope:'space science', slippers:'cozy', hoodie:'cozy sweatshirt'};
 const TOKSYN = {boy:'kid', girl:'kid', son:'kid', daughter:'kid', child:'kid', children:'kid', toddler:'kid', nephew:'kid', niece:'kid',
   teenager:'teen', mother:'mom', mum:'mom', father:'dad', grandmother:'grandma', grandpa:'grandma', grandparent:'grandma',
   grandfather:'grandma', headphone:'headphones', football:'soccer', sneaker:'sneakers', game:'games', gaming:'games', television:'tv'};
@@ -1018,7 +1096,7 @@ const sbar = document.getElementById('sbar'), searchInput = document.getElementB
 const dropEl = document.getElementById('search'), resultsEl = document.getElementById('results');
 const summaryEl = document.getElementById('summary'), clearBtn = document.getElementById('clearBtn');
 let matched = [];
-const EXAMPLES = ['Gift for a 12-year-old who likes soccer under $30','Headphones','Cozy gifts under $25','Something for a gamer','Gifts for mom under $20','Stocking stuffers under $10','Ice cream'];
+const EXAMPLES = ['Gift for a 12-year-old who likes soccer under $30','Headphones','Cozy gifts under $25','Something for a gamer','Gifts for mom under $20','Stocking stuffers under $10','Lunch under $10','Pizza'];
 const exEl = document.getElementById('examples');
 EXAMPLES.forEach(x=>{ const b=document.createElement('button'); b.type='button'; b.textContent=x; b.addEventListener('click',()=>{ searchInput.value=x; doSearch(x); }); exEl.appendChild(b); });
 function showDrop(v){ dropEl.hidden = !v; if(v){ toggleDirSilent(); } }
@@ -1094,7 +1172,7 @@ function drawMap(){
   mg.fillStyle='#3a3d45'; ELEV.forEach(e=>mg.fillRect(X(Math.min(e.s*7,e.s*10)),Z(-1.5),3*s,3*s));
   STORES.forEach(st=>{
     if(st.level!==lv) return;
-    const a=L(st,-st.hw,0), b=L(st,st.hw,14);
+    const a=L(st,-st.hw,0), b=L(st,st.hw,st.depth||14);
     const x0=Math.min(a[0],b[0]), x1=Math.max(a[0],b[0]), z0=Math.min(a[1],b[1]), z1=Math.max(a[1],b[1]);
     mg.fillStyle = st.color+'40'; mg.fillRect(X(x0),Z(z0),(x1-x0)*s,(z1-z0)*s);
     mg.strokeStyle = st.color; mg.lineWidth=1.5; mg.strokeRect(X(x0)+1,Z(z0)+1,(x1-x0)*s-2,(z1-z0)*s-2);
@@ -1121,9 +1199,10 @@ function updateWhere(){
   for(const st of STORES){
     if(st.level!==lv) continue;
     const dx=player.x-st.fx, dz=player.z-st.fz, v=dx*st.nx+dz*st.nz, u=dx*st.tx+dz*st.tz;
-    if(v>0.2 && v<14 && Math.abs(u)<st.hw){ txt='In '+st.name; break; }
+    if(v>0.2 && v<(st.depth||14) && Math.abs(u)<st.hw){ txt=(st.food?'At ':'In ')+st.name; break; }
   }
-  if(!txt && lv===1 && inAtrium(player.x,player.z) && Math.abs(player.z)<14) txt='Food Court';
+  if(!txt && lv===0 && player.z<-17 && Math.abs(player.x)<17) txt='Food Court';
+  if(!txt && lv===1 && inAtrium(player.x,player.z) && Math.abs(player.z)<14) txt='Café tables';
   if(!txt && lv===0 && Math.abs(player.x)<15.5 && Math.abs(player.z)<33) txt='On the turf';
   if(txt!==lastWhere){ lastWhere=txt; where.hidden=!txt; where.textContent=txt; }
 }
@@ -1172,7 +1251,7 @@ function buildRoute(st, it){
   link(NT,laneNode(2,0,32),'f'); link(ST,laneNode(2,0,-32),'f');
   // destination: lane -> just outside the door -> (in front of the product)
   const [lx,lz]=lanePtFor(st), LP=laneNode(st.level,lx,lz);
-  const [ddx,ddz]=L(st,0,it?-1.2:-3), D=add(ddx,ddz,st.level); link(LP,D,'f');
+  const [ddx,ddz]=L(st,0,it?(st.food?-3.5:-1.2):-3), D=add(ddx,ddz,st.level); link(LP,D,'f');
   let END=D;
   if(it){
     const [mx,mz]=L(st,0,it.v-3.2), Mid=add(mx,mz,st.level), [tx,tz]=L(st,it.u*.5,it.v-3.2), T=add(tx,tz,st.level);
@@ -1181,7 +1260,7 @@ function buildRoute(st, it){
   // start: from wherever the player is onto the network
   const lv=lvl(), x=player.x, z=player.z, y=player.y, P=add(x,z,lv);
   let here=null;
-  for(const s of STORES){ if(s.level!==lv) continue; const ex=x-s.fx, ez=z-s.fz, v=ex*s.nx+ez*s.nz, u=ex*s.tx+ez*s.tz; if(v>0 && v<14 && Math.abs(u)<s.hw){ here=s; break; } }
+  for(const s of STORES){ if(s.level!==lv) continue; const ex=x-s.fx, ez=z-s.fz, v=ex*s.nx+ez*s.nz, u=ex*s.tx+ez*s.tz; if(v>0 && v<(s.depth||14) && Math.abs(u)<s.hw){ here=s; break; } }
   if(Math.abs(y-lv*FH)>.05 && Math.abs(x)<3.2){
     if(y<FH) link(P, y<3?G:(z>0?NL:SL), 's01'); else link(P, y<9?(z>0?NL:SL):(z>0?NT:ST), 's12');
   } else if(here){
