@@ -443,7 +443,34 @@ for(let lv=0; lv<NLV; lv++){
   sbox(x+(Math.abs(x)>0?Math.sign(x)*-.02:0),2*FH-.78,z+(Math.abs(z)>0?Math.sign(z)*-.02:0),w,.05,d,LED,false,'e');
 });
 // skylight
-const sky = new THREE.Mesh(new THREE.PlaneGeometry(20,56), new THREE.MeshBasicMaterial({color:0xdaeeff})); sky.rotation.x=Math.PI/2; sky.position.set(0,3*FH-.02,0); scene.add(sky);
+// skylight: thin glass pane, then open sky above it (blue gradient, drifting clouds, a small sun)
+const skyGlass = new THREE.Mesh(new THREE.PlaneGeometry(20,56), new THREE.MeshBasicMaterial({color:0xd6ecff, transparent:true, opacity:.14, depthWrite:false, fog:false}));
+skyGlass.rotation.x=Math.PI/2; skyGlass.position.set(0,3*FH-.02,0); skyGlass.renderOrder=3; scene.add(skyGlass);
+const skyTex = (function(){
+  const S=1024, cv=document.createElement('canvas'); cv.width=cv.height=S; const g=cv.getContext('2d');
+  const gr=g.createRadialGradient(S/2,S/2,40,S/2,S/2,S*.75); gr.addColorStop(0,'#3f8fdc'); gr.addColorStop(.6,'#6db3ee'); gr.addColorStop(1,'#a9d6fb');
+  g.fillStyle=gr; g.fillRect(0,0,S,S);
+  const puff=(x,y,r,a)=>{ for(const ox of [-S,0,S]) for(const oy of [-S,0,S]){ const p=g.createRadialGradient(x+ox,y+oy,0,x+ox,y+oy,r); p.addColorStop(0,'rgba(255,255,255,'+a+')'); p.addColorStop(.55,'rgba(255,255,255,'+(a*.75)+')'); p.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=p; g.beginPath(); g.arc(x+ox,y+oy,r,0,7); g.fill(); } };
+  let seed=7; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  for(let c=0;c<22;c++){
+    const cx=rnd()*S, cy=rnd()*S, w=60+rnd()*120;
+    for(let k=0;k<9;k++) puff(cx+(rnd()-.5)*w*1.6, cy+(rnd()-.5)*w*.45, 26+rnd()*44, .55+rnd()*.3);
+  }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.encoding=THREE.sRGBEncoding; t.repeat.set(1.2,1.2); return t;
+})();
+const skyPlane = new THREE.Mesh(new THREE.PlaneGeometry(320,380), new THREE.MeshBasicMaterial({map:skyTex, fog:false}));
+skyPlane.rotation.x=Math.PI/2; skyPlane.position.set(0,48,0); scene.add(skyPlane);
+const sunSprite = (function(){
+  const S=256, cv=document.createElement('canvas'); cv.width=cv.height=S; const g=cv.getContext('2d');
+  // drawn on black and added as light, so the square edges of the sprite never show
+  g.fillStyle='#000'; g.fillRect(0,0,S,S);
+  const gr=g.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+  gr.addColorStop(0,'rgb(255,253,240)'); gr.addColorStop(.17,'rgb(255,248,215)'); gr.addColorStop(.23,'rgb(190,170,110)'); gr.addColorStop(.5,'rgb(70,60,35)'); gr.addColorStop(1,'rgb(0,0,0)');
+  g.fillStyle=gr; g.fillRect(0,0,S,S);
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t, fog:false, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending}));
+  s.scale.set(10.5,10.5,1); s.position.set(4.5,37,-10); s.renderOrder=1; scene.add(s); return s;
+})();
 for(let z=-24; z<=24; z+=4) sbox(0,3*FH-.12,z,20,.18,.18,CHAR,false);
 sbox(0,3*FH-.12,0,.2,.2,56,CHAR,false);
 // full-height columns at the atrium corners
@@ -722,8 +749,10 @@ function bannerTex(lines, bg){
 }
 const banners = [bannerTex(['Find it','Type it in','the search bar','up top'],'#e4572e'), bannerTex(['Holidays','55 shops','3 levels','1 tree'],'#2e7d4a'), bannerTex(['Hungry?','6 restaurants','in the food court','downstairs'],'#2f6fd0')];
 [[-9.6,-12,0],[9.6,-12,1],[-9.6,12,2],[9.6,12,0],[-9.6,-22,1],[9.6,22,2]].forEach(([x,z,k])=>{
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7,5.1), new THREE.MeshBasicMaterial({map:banners[k], side:THREE.DoubleSide}));
-  m.position.set(x,2*FH+3.2,z); m.rotation.y = x<0 ? Math.PI/2 : -Math.PI/2; scene.add(m);
+  [0,1].forEach(back=>{
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7,5.1), new THREE.MeshBasicMaterial({map:banners[(k+back)%banners.length]}));
+    m.position.set(x+(x<0?-1:1)*(back?.01:-.01),2*FH+3.2,z); m.rotation.y = (x<0 ? Math.PI/2 : -Math.PI/2) + (back?Math.PI:0); scene.add(m);
+  });
   sbox(x,2*FH+5.85,z,.06,.06,1.9,CHAR,false);
 });
 // ring benches + planters on the Main and Upper levels
@@ -1528,6 +1557,7 @@ function step(dt){
   chaseStep(dt);
   if(!reduceMotion){
     for(const m of spinners) m.rotation.y += dt*.6;
+    skyTex.offset.x += dt*.0025; skyTex.offset.y += dt*.0008;
     updatePeople(dt,t);
     xmasLights.material.size = .2 + .05*Math.sin(t*3);
     fountainWater.position.y = .56 + Math.sin(t*2)*.01;
