@@ -638,6 +638,95 @@ for(let lv=1; lv<NLV; lv++){
   [[-14,-18],[14,-18],[-14,18],[14,18]].forEach(([x,z])=>bench(x,y,z,true));
   [[-14,-8],[14,-8],[-14,8],[14,8],[-13,-31],[13,-31],[-13,31],[13,31]].forEach(([x,z])=>planter(x,y,z));
 }
+
+// ================= Ad billboards (digital poster screens) =================
+// Shop ads link to the shop. Outside "sponsors" are made-up example brands, labelled as such.
+const ADS = [
+ {shop:'Sound Shack', head:'Hear every detail.', sub:'Over-ear headphones from $79', bg:'#2b2f3d', ac:'#ff7a4d', art:'rings'},
+ {shop:'Scoops Ice Cream', head:'Two scoops. Zero regrets.', sub:'Waffle cones from $4', bg:'#e8689a', ac:'#fff3c4', art:'dots'},
+ {shop:'Byte Electronics', head:'Big screens. Small prices.', sub:'Smart TVs from $299', bg:'#23439a', ac:'#7fd3ff', art:'bars'},
+ {shop:'Bloom Florist', head:'Say it with flowers.', sub:'Hand-tied bouquets from $25', bg:'#b9476b', ac:'#ffd6e3', art:'petals'},
+ {shop:'Skate Shop', head:'Roll out.', sub:'Complete skateboards $69', bg:'#c9392a', ac:'#ffd166', art:'wave'},
+ {shop:'Chocolate Works', head:'Gift a little joy.', sub:'Truffle boxes from $18', bg:'#4e2b1b', ac:'#e8b87a', art:'dots'},
+ {shop:'Lantern Cinema', head:'Now showing.', sub:'Movie ticket + popcorn for $20', bg:'#18191f', ac:'#f4d35e', art:'rays'},
+ {shop:'Fresh Market', head:'Fresh every morning.', sub:'Fruit, bread and flowers', bg:'#2a7d43', ac:'#d8f5c8', art:'petals'},
+ {shop:'Science Shop', head:'Curious minds welcome.', sub:'Robot kits from $49', bg:'#2a6fae', ac:'#ffe66d', art:'rings'},
+ {shop:'Cozy Corner', head:'Cozy season is here.', sub:'Hoodies from $35', bg:'#7c5bab', ac:'#fff1d6', art:'wave'},
+ {shop:'Card & Gift', brand:'Lantern Court Gift Card', head:'The gift that fits everyone.', sub:'Any amount. Any of our 55 shops.', bg:'#d94e26', ac:'#ffffff', art:'rings'},
+ {brand:'Harborline Bank', head:'Banking that keeps up with you.', sub:'Open an account in 5 minutes', bg:'#0f2b4f', ac:'#4fd1c5', art:'bars'},
+ {brand:'Fernway Air', head:'Fly somewhere warm.', sub:'Winter fares from $89', bg:'#0d6f7c', ac:'#ffd9a0', art:'rays'},
+ {brand:'Kestrel Mobile', head:'Unlimited data. One simple price.', sub:'$25 a month, no contract', bg:'#432784', ac:'#ff8fb1', art:'dots'}
+];
+function rr(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+function wrap(g,text,maxW){ const out=[]; let line=''; text.split(' ').forEach(w=>{ const t=line?line+' '+w:w; if(g.measureText(t).width>maxW && line){ out.push(line); line=w; } else line=t; }); if(line) out.push(line); return out; }
+function drawAd(a){
+  const g=a.g, W=384, H=672, st=a.shop?STORES.find(s=>s.name===a.shop):null, brand=a.brand||a.shop;
+  const c1=new THREE.Color(a.bg), c2=c1.clone().lerp(new THREE.Color(0x000000),.38);
+  const gr=g.createLinearGradient(0,0,W,H); gr.addColorStop(0,'#'+c1.getHexString()); gr.addColorStop(1,'#'+c2.getHexString());
+  g.fillStyle=gr; g.fillRect(0,0,W,H);
+  g.save(); g.globalAlpha=.17; g.fillStyle=a.ac; g.strokeStyle=a.ac; g.lineWidth=16;
+  if(a.art==='rings') for(let r=70;r<=310;r+=60){ g.beginPath(); g.arc(W*.82,H*.66,r,0,7); g.stroke(); }
+  if(a.art==='dots') for(let y=330;y<H-150;y+=34) for(let x=150+((y/34)%2)*17;x<W+20;x+=34){ g.beginPath(); g.arc(x,y,9,0,7); g.fill(); }
+  if(a.art==='bars') for(let i=0;i<7;i++){ const h=90+((i*53)%170); g.fillRect(150+i*36,H-170-h,22,h); }
+  if(a.art==='petals') for(let i=0;i<6;i++){ g.save(); g.translate(W*.78,H*.62); g.rotate(i*Math.PI/3); g.beginPath(); g.ellipse(0,-80,46,86,0,0,7); g.fill(); g.restore(); }
+  if(a.art==='wave') for(let k=0;k<5;k++){ g.beginPath(); for(let x=0;x<=W;x+=8) g.lineTo(x,380+k*44+Math.sin(x/46+k)*22); g.stroke(); }
+  if(a.art==='rays'){ g.translate(W,0); for(let i=0;i<9;i++){ g.rotate(.13); g.fillRect(-12,0,24,-H*1.6); } }
+  g.restore();
+  // brand row
+  g.fillStyle=a.ac; rr(g,30,30,46,46,12); g.fill();
+  g.fillStyle='#'+c2.getHexString(); g.font='800 26px Outfit, system-ui, sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(brand[0],53,55);
+  g.textAlign='left'; g.fillStyle='#ffffff'; fitText(g,brand,'700 21px Inter, system-ui, sans-serif',200); g.fillText(brand,88,55);
+  g.font='700 13px Inter, system-ui, sans-serif'; g.strokeStyle='rgba(255,255,255,.7)'; g.lineWidth=1.5; rr(g,W-66,40,38,22,6); g.stroke();
+  g.fillStyle='rgba(255,255,255,.85)'; g.textAlign='center'; g.fillText('AD',W-47,52);
+  // headline + offer
+  g.textAlign='left'; g.textBaseline='alphabetic'; g.fillStyle='#ffffff';
+  let size=58, lines; do{ g.font='800 '+size+'px Outfit, system-ui, sans-serif'; lines=wrap(g,a.head,W-64); size-=4; } while(lines.length>4 && size>30);
+  let y=180; lines.forEach(l=>{ g.fillText(l,32,y); y+=size+8; });
+  g.font='500 22px Inter, system-ui, sans-serif'; g.fillStyle='rgba(255,255,255,.88)';
+  wrap(g,a.sub,W-64).forEach(l=>{ y+=8; g.fillText(l,32,y+16); y+=26; });
+  // call to action + footer
+  const cta = st ? 'Visit us · '+LEVEL_NAMES[st.level] : 'Learn more';
+  g.font='700 19px Inter, system-ui, sans-serif'; const cw=g.measureText(cta).width+44;
+  g.fillStyle='#ffffff'; rr(g,32,H-128,cw,48,24); g.fill();
+  g.fillStyle='#'+c2.getHexString(); g.textBaseline='middle'; g.fillText(cta,54,H-103);
+  g.font='500 15px Inter, system-ui, sans-serif'; g.fillStyle='rgba(255,255,255,.62)';
+  g.fillText(st ? 'Lantern Court · '+st.name : 'Sponsored · example brand', 32, H-42);
+  if(a.tex) a.tex.needsUpdate=true;
+}
+ADS.forEach(a=>{ const cv=document.createElement('canvas'); cv.width=384; cv.height=672; a.g=cv.getContext('2d'); a.tex=new THREE.CanvasTexture(cv); a.tex.encoding=THREE.sRGBEncoding; a.tex.anisotropy=4; drawAd(a); });
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>ADS.forEach(drawAd));
+const BOARDS=[], adScreens=[];
+function billboard(x,y,z,nx,nz,double){
+  const ax = nx!==0, cy=y+1.58;
+  sbox(x,cy,z, ax?.16:1.36, 2.36, ax?1.36:.16, CHAR,false);
+  sbox(x,y+.2,z,.14,.4,.14,CHAR,false);
+  sbox(x,y+.05,z, ax?.4:.7, .1, ax?.7:.4, CHAR,false);
+  addCol(x-(ax?.25:.4),x+(ax?.25:.4),z-(ax?.4:.25),z+(ax?.4:.25),y,y+2.8);
+  const bb={idx:(BOARDS.length*5)%ADS.length, next:6+BOARDS.length*1.7%9, meshes:[]};
+  const mk=(sgn)=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.2,2.1), new THREE.MeshBasicMaterial({map:ADS[bb.idx].tex}));
+    m.position.set(x+nx*.085*sgn, cy, z+nz*.085*sgn); m.rotation.y=Math.atan2(nx*sgn,nz*sgn); m.userData.bb=bb; scene.add(m); bb.meshes.push(m); adScreens.push(m); };
+  mk(1); if(double) mk(-1);
+  BOARDS.push(bb);
+}
+for(let lv=1; lv<NLV; lv++) [-1,1].forEach(s=>[-27,-9,9,27].forEach(z=>billboard(s*17.55,lv*FH,z,-s,0,false)));
+[-1,1].forEach(s=>[-12,12].forEach(z=>billboard(s*17.45,0,z,-s,0,false)));
+billboard(-10,0,-35.45,0,1,false); billboard(10,0,-35.45,0,1,false);
+[[-8.5,-24],[8.5,-24],[-8.5,24],[8.5,24]].forEach(([x,z])=>billboard(x,FH,z,0,1,true));
+function updateAds(t){
+  for(const bb of BOARDS){ if(t>=bb.next){ bb.idx=(bb.idx+1)%ADS.length; bb.next=t+8; bb.meshes.forEach(m=>{ m.material.map=ADS[bb.idx].tex; }); } }
+}
+function pickAd(cx,cy){
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((cx-r.left)/r.width)*2-1, -((cy-r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc, camera); ray.far=18;
+  const hit = ray.intersectObjects(adScreens, false)[0]; ray.far=14;
+  return hit ? hit.object.userData.bb : null;
+}
+function adClick(bb){
+  const a=ADS[bb.idx];
+  if(a.shop){ const st=STORES.find(s=>s.name===a.shop); if(st) travelToShop(st); }
+  else showToast(a.brand+' is a made-up example sponsor');
+}
 flushBatches();
 
 // ================= Shoppers =================
@@ -770,7 +859,8 @@ function endPointer(e){
   if(p.mode==='stick'){ stickVec={x:0,y:0}; knob.style.transform=''; stickEl.hidden=true; }
   if(e.type==='pointerup' && p.moved<8 && performance.now()-p.t<500){
     const o = pick(e.clientX,e.clientY);
-    if(o) openCard(o.userData.item, o.userData.store); else closeCard();
+    if(o) openCard(o.userData.item, o.userData.store);
+    else { const bb = pickAd(e.clientX,e.clientY); if(bb) adClick(bb); else closeCard(); }
   }
 }
 canvas.addEventListener('pointerup', endPointer);
@@ -787,7 +877,9 @@ function setHover(o){
 }
 function hover(x,y){
   const o = pick(x,y); setHover(o);
-  if(o){ tip.textContent = o.userData.item.n+' · '+fmt(o.userData.item.p); tip.style.left=x+'px'; tip.style.top=y+'px'; tip.hidden=false; }
+  if(o){ tip.textContent = o.userData.item.n+' · '+fmt(o.userData.item.p); tip.style.left=x+'px'; tip.style.top=y+'px'; tip.hidden=false; return; }
+  const bb = pickAd(x,y);
+  if(bb){ const a=ADS[bb.idx]; tip.textContent = a.shop ? 'Ad · '+(a.brand||a.shop)+' · click to visit' : 'Ad · '+a.brand+' (example sponsor)'; tip.style.left=x+'px'; tip.style.top=y+'px'; tip.hidden=false; canvas.style.cursor='pointer'; }
   else hideTip();
 }
 function hideTip(){ tip.hidden=true; }
@@ -1218,7 +1310,7 @@ function step(dt){
 function frame(now){
   const dt = Math.min(.05,(now-last)/1000); last=now;
   step(dt);
-  updateSearchFx(t);
+  updateSearchFx(t); updateAds(t);
   renderer.render(scene,camera);
   drawMap(); updateWhere(); updateAction();
   requestAnimationFrame(frame);
