@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Walk through Lantern Court, a two-level 3D mall with 36 shops, stairs, glass elevators and a food court.">
+<meta name="description" content="Walk and search Lantern Court, a three-level 3D mall with 55 shops, a garden level, glass elevators and a holiday tree.">
 <title>Lantern Court Mall</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: full-screen 3D canvas, floating HUD chips at the corners, product card as a bottom sheet. Single deliberate light look. */
+/* Layout: full-screen 3D canvas; wide search bar pinned top-centre with a results dropdown; chips top-left; minimap top-right; product card and elevator buttons bottom-centre. Single bright modern look. */
 :root{
-  --ink:#1f1b2e; --panel:#fffaf3; --panel-line:#eadfce; --muted:#6c6479;
-  --accent:#d9572b; --accent-ink:#ffffff; --ground:#cdbfa9;
+  --ink:#1c1d22; --panel:#ffffff; --panel-line:#e3e5e8; --muted:#6b6f78; --soft:#f2f3f5;
+  --accent:#e4572e; --accent-ink:#ffffff; --ground:#e9ecef;
   --display:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
   --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
   color-scheme:light;
@@ -20,82 +20,122 @@
 html,body{height:100%;margin:0;overflow:hidden}
 body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:14px;-webkit-user-select:none;user-select:none}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
-.hud{position:fixed;z-index:5;display:flex;gap:8px;align-items:center}
-#top{top:calc(env(safe-area-inset-top,0px) + 12px);left:max(12px,env(safe-area-inset-left,0px));flex-wrap:wrap;max-width:calc(100% - 170px)}
-.chip{background:var(--panel);border:1px solid var(--panel-line);border-radius:999px;padding:8px 14px;font-size:13px;box-shadow:0 4px 14px rgb(31 27 46 / .12)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chip{background:var(--panel);border:1px solid var(--panel-line);border-radius:999px;padding:8px 14px;font-size:13px;box-shadow:0 4px 14px rgb(28 29 34 / .10)}
+#top{position:fixed;z-index:5;top:calc(env(safe-area-inset-top,0px) + 12px);left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:calc(50% - 312px)}
 .brand{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.01em}
 .brand span{color:var(--accent)}
-button{font:inherit;color:inherit;cursor:pointer}
 #dirBtn{font-weight:600}
-button:focus-visible,#card a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 #level{font-family:var(--display);font-weight:700;background:var(--ink);color:#fff;border-color:var(--ink)}
 #where{font-weight:600}
-#map{position:fixed;z-index:5;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));width:120px;height:182px;background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;box-shadow:0 4px 14px rgb(31 27 46 / .12)}
-#help{bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12.5px;color:var(--muted)}
-#act{position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 60px);background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:12px 22px;font-weight:700;font-size:15px;box-shadow:0 8px 22px rgb(217 87 43 / .35)}
-#act:disabled{background:var(--ink);opacity:.85;box-shadow:none;cursor:default}
-#act kbd{font:600 11px var(--body);background:rgb(255 255 255 / .25);border-radius:5px;padding:2px 6px;margin-left:8px}
-#searchBtn{font-weight:700;background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-#clearBtn{font-weight:600}
-#search .lbl{display:block;font-family:var(--display);font-weight:700;font-size:16px;margin:0 0 8px}
-#searchInput{width:100%;box-sizing:border-box;font:15px var(--body);color:var(--ink);background:#fff;border:1.5px solid var(--panel-line);border-radius:12px;padding:11px 12px;outline:none}
-#searchInput:focus{border-color:var(--accent)}
-.ex{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
-.ex button{background:#f2e8da;border:0;border-radius:999px;padding:6px 10px;font-size:12px;color:var(--ink)}
-.ex button:hover{background:#eadbc6}
-#summary{margin:10px 2px 6px;color:var(--muted);font-size:12.5px}
+#map{position:fixed;z-index:5;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));width:120px;height:182px;background:var(--panel);border:1px solid var(--panel-line);border-radius:14px;box-shadow:0 4px 14px rgb(28 29 34 / .10)}
+
+/* search bar */
+#sbar{position:fixed;z-index:8;top:calc(env(safe-area-inset-top,0px) + 12px);left:50%;transform:translateX(-50%);width:min(580px,calc(100% - 560px));height:52px;box-sizing:border-box;display:flex;align-items:center;gap:8px;background:var(--panel);border:1.5px solid var(--panel-line);border-radius:999px;padding:0 7px 0 18px;box-shadow:0 10px 28px rgb(28 29 34 / .16)}
+#sbar:focus-within{border-color:var(--accent);box-shadow:0 10px 30px rgb(228 87 46 / .22)}
+#sbar svg{flex:none;width:20px;height:20px;color:var(--muted)}
+#searchInput{flex:1;min-width:0;height:100%;border:0;outline:none;background:transparent;font:16px var(--body);color:var(--ink)}
+#searchInput::placeholder{color:#8d919a}
+#searchInput::-webkit-search-cancel-button{display:none}
+#clearBtn{flex:none;height:38px;border:0;border-radius:999px;background:var(--soft);padding:0 12px;font-weight:600;font-size:13px}
+#goBtn{flex:none;height:38px;border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 18px}
+#search{position:fixed;z-index:8;top:calc(env(safe-area-inset-top,0px) + 72px);left:50%;transform:translateX(-50%);width:min(580px,calc(100% - 24px));max-height:calc(100% - 200px);overflow:auto;box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:18px;padding:14px;box-shadow:0 16px 36px rgb(28 29 34 / .18)}
+#search h4{margin:2px 2px 8px;font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ex{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 4px}
+.ex button{background:var(--soft);border:0;border-radius:999px;padding:7px 12px;font-size:13px}
+.ex button:hover{background:#e7e9ec}
+#summary{margin:10px 2px 6px;color:var(--muted);font-size:13px}
 #results{list-style:none;margin:0;padding:0;display:grid;gap:2px}
-.res{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:2px 10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:8px}
-.res:hover{background:#f2e8da}
+.res{display:grid;grid-template-columns:12px minmax(0,1fr) auto;gap:2px 10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-radius:12px;padding:9px 8px}
+.res:hover{background:var(--soft)}
 .res b{font-weight:600}
 .res .pr{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums}
 .res small{grid-column:2 / 4;color:var(--muted);font-size:12px}
-div#search{width:min(380px,calc(100% - 24px))}
-#dir,#search{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 60px);left:max(12px,env(safe-area-inset-left,0px));width:min(300px,calc(100% - 24px));max-height:calc(100% - 140px);overflow:auto;box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;padding:14px;box-shadow:0 10px 30px rgb(31 27 46 / .18)}
+.sw{width:12px;height:12px;border-radius:4px;flex:none}
+
+/* directory */
+#dir{position:fixed;z-index:7;top:calc(env(safe-area-inset-top,0px) + 108px);left:max(12px,env(safe-area-inset-left,0px));width:min(300px,calc(100% - 24px));max-height:calc(100% - 190px);overflow:auto;box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:16px;padding:14px;box-shadow:0 12px 30px rgb(28 29 34 / .16)}
 #dir h3{margin:6px 0 4px;font-family:var(--display);font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 #dir ul{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:2px}
 .go{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:7px 8px}
-.go:hover{background:#f2e8da}
-.sw{width:12px;height:12px;border-radius:4px;flex:none}
+.go:hover{background:var(--soft)}
 .go small{margin-left:auto;color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+
+#help{position:fixed;z-index:5;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12.5px;color:var(--muted)}
+#actions{position:fixed;z-index:6;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 60px);display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:max-content;max-width:calc(100% - 24px)}
+.act{background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:12px 20px;font-weight:700;font-size:15px;box-shadow:0 8px 22px rgb(228 87 46 / .32)}
+.act:disabled{background:var(--ink);opacity:.85;box-shadow:none;cursor:default}
+.act kbd{font:600 11px var(--body);background:rgb(255 255 255 / .25);border-radius:5px;padding:2px 6px;margin-left:8px}
+#toast{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 76px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:999px;padding:10px 18px;font-weight:600;font-size:14px;box-shadow:0 10px 26px rgb(28 29 34 / .25);transition:opacity .3s;white-space:nowrap}
 #tip{position:fixed;z-index:6;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:5px 9px;border-radius:8px;transform:translate(14px,14px)}
-#card{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(380px,calc(100% - 32px));box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:20px;padding:18px 18px 16px;box-shadow:0 18px 40px rgb(31 27 46 / .25);display:grid;gap:6px}
-#card .st{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+
+#card{position:fixed;z-index:7;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:min(380px,calc(100% - 32px));box-sizing:border-box;background:var(--panel);border:1px solid var(--panel-line);border-radius:20px;padding:18px 18px 16px;box-shadow:0 18px 40px rgb(28 29 34 / .22);display:grid;gap:6px}
+#card .st{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
 #card h2{margin:0;font-family:var(--display);font-size:22px;line-height:1.15;text-wrap:balance;padding-right:30px}
 #card .price{font-family:var(--display);font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
 #card p{margin:0;color:var(--muted);line-height:1.5;font-size:14px}
 #card a{margin-top:6px;display:block;text-align:center;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:600;padding:11px;border-radius:12px}
 #card small{color:var(--muted);font-size:11.5px;text-align:center}
 #close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:1px solid var(--panel-line);background:#fff;font-size:18px;line-height:1}
-#stick{position:fixed;z-index:4;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgb(255 250 243 / .35);border:2px solid rgb(255 250 243 / .8);pointer-events:none}
-#knob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:var(--panel);box-shadow:0 3px 10px rgb(0 0 0 / .2)}
-#loading{position:fixed;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--ink);z-index:9;background:var(--ground)}
-@media (max-width:560px){#help{white-space:normal;text-align:center;width:calc(100% - 32px);box-sizing:border-box} #map{width:92px;height:140px} #top{max-width:calc(100% - 120px)} #act{bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}}
+
+#welcome{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgb(28 29 34 / .38);padding:16px}
+.wc{background:#fff;border-radius:24px;max-width:440px;width:100%;box-sizing:border-box;padding:28px 26px 24px;box-shadow:0 24px 60px rgb(28 29 34 / .3)}
+.wc .eyebrow{font:700 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.wc h1{margin:6px 0 6px;font-family:var(--display);font-size:30px;line-height:1.1;text-wrap:balance}
+.wc p{margin:0 0 16px;color:var(--muted);line-height:1.5}
+.wc ul{list-style:none;margin:0 0 20px;padding:0;display:grid;gap:12px}
+.wc li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:center;line-height:1.4}
+.wc li i{font-style:normal;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:700 14px var(--display);color:#fff}
+#startBtn{width:100%;border:0;border-radius:14px;background:var(--accent);color:#fff;font:700 16px var(--body);padding:14px}
+#loading{position:fixed;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:20px;color:var(--ink);z-index:30;background:var(--ground)}
+#stick{position:fixed;z-index:4;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgb(255 255 255 / .35);border:2px solid rgb(255 255 255 / .85);pointer-events:none}
+#knob{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:#fff;box-shadow:0 3px 10px rgb(0 0 0 / .2)}
+
+@media (max-width:1000px){
+  #sbar{left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));width:auto;transform:none}
+  #search{left:12px;right:12px;width:auto;transform:none}
+  #top{top:calc(env(safe-area-inset-top,0px) + 74px);max-width:calc(100% - 130px)}
+  #map{top:calc(env(safe-area-inset-top,0px) + 74px);width:96px;height:146px}
+  #dir{top:calc(env(safe-area-inset-top,0px) + 168px)}
+  #toast{top:calc(env(safe-area-inset-top,0px) + 230px)}
+  #goBtn{padding:0 14px}
+}
+@media (max-width:620px){
+  #help{white-space:normal;text-align:center;width:calc(100% - 32px);box-sizing:border-box}
+  #actions{bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}
+  .brand{display:none}
+}
 </style>
 </head>
 <body>
 <canvas id="c" tabindex="0" aria-label="3D mall. Use arrow keys or WASD to walk, drag to look around, click a product to see it."></canvas>
 <div id="loading">Opening the doors…</div>
 
-<div class="hud" id="top">
-  <div class="chip brand">Lantern <span>Court</span></div>
-  <button class="chip" id="searchBtn" aria-expanded="false" aria-controls="search">Search</button>
-  <button class="chip" id="clearBtn" hidden>Clear search ×</button>
-  <button class="chip" id="dirBtn" aria-expanded="false" aria-controls="dir">Directory</button>
-  <div class="chip" id="level">Level 1</div>
-  <div class="chip" id="where" hidden></div>
-</div>
-<canvas id="map" width="240" height="364" aria-hidden="true"></canvas>
-<div id="dir" hidden></div>
-<div id="search" hidden role="dialog" aria-label="Search the mall">
-  <label for="searchInput" class="lbl">What are you looking for?</label>
-  <input id="searchInput" type="search" placeholder="Try: gift for a 12-year-old who likes soccer" autocomplete="off" enterkeyhint="go">
+<form id="sbar" role="search" autocomplete="off">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.6-3.6"></path></svg>
+  <input id="searchInput" type="search" placeholder="Search 55 shops: try “gift for mom under $20”" aria-label="Search the mall" enterkeyhint="search">
+  <button type="button" id="clearBtn" hidden>Clear</button>
+  <button type="submit" id="goBtn">Search</button>
+</form>
+<div id="search" hidden>
+  <h4>Try one of these</h4>
   <div class="ex" id="examples"></div>
   <p id="summary" hidden></p>
   <ul id="results"></ul>
 </div>
-<button id="act" hidden></button>
-<div class="hud chip" id="help">Drag to look · WASD or arrows to walk · Shift to hurry · Click a product · E for elevator · / to search</div>
+
+<div id="top">
+  <div class="chip brand">Lantern <span>Court</span></div>
+  <button class="chip" id="dirBtn" aria-expanded="false" aria-controls="dir">Directory</button>
+  <div class="chip" id="level">Main Level</div>
+  <div class="chip" id="where" hidden></div>
+</div>
+<canvas id="map" width="240" height="364" aria-hidden="true"></canvas>
+<div id="dir" hidden></div>
+<div id="actions"></div>
+<div id="toast" hidden></div>
+<div class="chip" id="help">Drag to look · WASD or arrows to walk · Shift to hurry · Click a product · / to search</div>
 <div id="tip" hidden></div>
 <div id="stick" hidden><div id="knob"></div></div>
 
@@ -109,6 +149,20 @@ div#search{width:min(380px,calc(100% - 24px))}
   <small>Example prices. The button opens a product search.</small>
 </div>
 
+<div id="welcome" hidden role="dialog" aria-labelledby="wTitle">
+  <div class="wc">
+    <div class="eyebrow">Welcome</div>
+    <h1 id="wTitle">Lantern Court is open</h1>
+    <p>Three levels, 55 shops and a turf garden downstairs. Look around, or tell the search bar what you need.</p>
+    <ul>
+      <li><i style="background:#e4572e">1</i><span>Type in the search bar, like <b>gift for a 12-year-old who likes soccer</b>. Matches glow and get arrows.</span></li>
+      <li><i style="background:#2f6fd0">2</i><span>Walk with <b>WASD</b> or the arrow keys and drag to look. On a phone, use your left thumb to walk.</span></li>
+      <li><i style="background:#2e8a57">3</i><span>Take the stairs or ride the glass elevators. The Garden Level is at the bottom.</span></li>
+    </ul>
+    <button id="startBtn">Start exploring</button>
+  </div>
+</div>
+
 <script>
 function mallFail(msg){ var l=document.getElementById('loading'); if(!l) return; l.hidden=false; l.style.cssText+=';padding:24px;text-align:center;font-size:16px;line-height:1.5'; l.innerHTML='<div style="max-width:460px"><b style="font-size:20px">The mall couldn’t open</b><br>'+msg+'</div>'; }
 (function(){ var ok=false; try{ var c=document.createElement('canvas'); ok=!!(window.WebGLRenderingContext && (c.getContext('webgl')||c.getContext('experimental-webgl'))); }catch(e){}
@@ -120,9 +174,18 @@ window.addEventListener('error', function(e){ if(window.__noGL) return; mallFail
 (function(){
 if(!window.THREE || window.__noGL) return;
 
-// ---------------- Store data ----------------
+// ================= Store data =================
 // item: name|price|shape|dims|hex   shapes: b box(w,h,d) c cylinder(r,h) s sphere(r) k cone(r,h,seg) t ring(r,tube) p plant
-const RAW = [
+const RAW_GARDEN = [
+ ['Fresh Market','Grocery','#3f9a4f','Apple bag|5|s|.3|d63b2f','Orange juice|4|b|.3,.6,.3|f2a23a','Bread loaf|4|c|.25,.5|c98b4a','Flower bouquet|12|k|.35,.7|e85d9a'],
+ ['Lantern Cinema','Movies','#b8322f','Popcorn tub|8|c|.3,.5|f4d35e','Movie ticket|12|b|.5,.25,.02|e0453a','Candy box|5|b|.35,.5,.12|7a46c9','Soda cup|5|c|.2,.5|2f6fd0'],
+ ['Buddy Workshop','Plush','#e5487a','Custom plush|29|s|.4|c98b6a','Plush outfit|12|b|.5,.5,.1|5aa4e0','Sound chip|6|c|.15,.08|333333','Gift box|5|b|.5,.4,.5|f2c230'],
+ ['Turf & Track','Sports','#2a8f6e','Soccer cleats|59|b|.8,.4,.35|222222','Shin guards|19|b|.3,.5,.15|3b7dd8','Training cones|15|k|.2,.4|f2762e','Team jersey|35|b|.7,.75,.06|c0392b'],
+ ['Nest Furniture','Furniture','#8a6a4a','Bean bag|79|s|.55|5b6b8a','Side table|49|c|.4,.6|c9a46a','Area rug|59|b|1,.06,.7|b5476b','Bookshelf|99|b|.8,1.2,.3|e8dcc8'],
+ ['Scoops Ice Cream','Ice cream','#f08aae','Waffle cone|4|k|.2,.45|e0a96d','Sundae|7|c|.25,.3|f4c6d9','Milkshake|6|c|.18,.55|f7e1c6','Ice cream pint|6|c|.2,.3|8b5e3c'],
+ ['Byte Electronics','Electronics','#2b4f9e','Smart TV|299|b|1.2,.75,.06|111111','Laptop|499|b|.8,.05,.55|9aa5b1','Tablet|199|b|.5,.7,.04|222222','Game console|399|b|.6,.12,.45|f4f4f4']
+];
+const RAW_MAIN = [
  ['Sneaker Shop','Footwear','#d9572b','White sneakers|65|b|.9,.45,.4|f4f1ea','Running shoes|90|b|.9,.45,.4|3b7dd8','Canvas high-tops|75|b|.8,.7,.4|b3262e','Pool slides|25|b|.8,.2,.35|222222'],
  ['Tech Store','Electronics','#2f6fd0','Wireless earbuds|49|s|.3|ffffff','Mechanical keyboard|69|b|1.1,.12,.4|2b2b33','Smart watch|129|c|.28,.12|111111','Portable speaker|39|c|.25,.6|1fa58a'],
  ['Game Store','Games','#7a46c9','Wireless controller|59|b|.7,.25,.45|2a2a2a','Gaming headset|45|t|.32,.07|d13c3c','Strategy board game|29|b|.8,.18,.8|e2b23a','Retro handheld|65|b|.45,.7,.15|c9c4d6'],
@@ -141,6 +204,14 @@ const RAW = [
  ['Watch & Jewelry','Jewelry','#a68a2b','Silver necklace|59|t|.25,.03|d7d7d7','Gold ring|79|t|.12,.04|e2b23a','Sport watch|89|c|.25,.12|222222','Pearl earrings|39|s|.12|f5e6b8'],
  ['Kids Closet','Kids','#4aa3df','Rain jacket|35|b|.6,.75,.2|f2c230','Pajama set|22|b|.6,.4,.3|9ec7f2','Kids sneakers|39|b|.6,.35,.3|e85d75','Pom beanie|12|s|.28|5aa469'],
  ['Party Store','Party','#f05a8c','Balloon pack|8|s|.35|ff4f7a','Party hats|7|k|.25,.5|7a46c9','Streamers|6|c|.25,.2|2ec4b6','Piñata|29|s|.4|f9c74f'],
+ ['Bloom Florist','Flowers','#d4577a','Rose bouquet|25|k|.35,.7|d6334f','Tulip pot|18|c|.2,.45|f2a7c3','Sunflower bunch|15|s|.32|f2c230','Glass vase|20|c|.18,.6|bfe0ea'],
+ ['Brick Lab','Building sets','#d9852b','Castle set|59|b|.7,.5,.5|8d99a6','Space set|45|b|.6,.4,.5|2f6fd0','Mini figures|10|c|.1,.3|f2c230','Brick bucket|25|c|.3,.4|d8352a'],
+ ['Smoothie Bar','Drinks','#4fb38a','Berry smoothie|6|c|.15,.5|b0306a','Mango smoothie|6|c|.15,.5|f2a23a','Acai bowl|9|c|.28,.15|5b2a6e','Reusable cup|12|c|.15,.5|2ec4b6'],
+ ['Sock Spot','Socks','#8f5bd6','Fun socks|8|b|.2,.6,.08|f05a8c','Cozy socks|10|b|.2,.6,.1|e8d5a8','Sport socks 6-pack|14|b|.4,.3,.3|f4f4f4','Holiday socks|9|b|.2,.6,.08|c0392b'],
+ ['Puzzle Palace','Puzzles','#2f7fb5','500-piece jigsaw|15|b|.6,.1,.45|58a4d4','Brain teaser|8|t|.15,.04|c9ced4','Puzzle cube|10|b|.35,.35,.35|e0453a','Wooden puzzle|18|b|.5,.12,.5|c9a46a'],
+ ['Sound Shack','Audio','#333a4d','Over-ear headphones|79|t|.3,.06|222222','Vinyl record|25|c|.35,.02|111111','Bluetooth speaker|49|c|.22,.5|e0453a','Record player|99|b|.7,.2,.55|8b5e3c']
+];
+const RAW_UPPER = [
  ['Denim Depot','Clothing','#2f4f7f','Slim jeans|49|b|.6,.8,.15|33507a','Denim jacket|69|b|.7,.8,.2|5577a8','Denim shorts|35|b|.6,.4,.15|6c8fc0','Leather belt|19|t|.3,.04|5a3d2b'],
  ['Hat Rack','Hats','#8a5a3b','Baseball cap|22|s|.3|c0392b','Bucket hat|25|c|.3,.25|e8d5a8','Winter beanie|15|s|.28|2c3e50','Sun hat|29|c|.45,.12|f0d9a0'],
  ['Backpack Base','Bags','#3a6b8c','School backpack|45|b|.6,.8,.3|2d6a8a','Laptop sleeve|25|b|.7,.5,.06|555555','Duffel bag|49|c|.3,.8|1e1e1e','Fanny pack|19|b|.5,.2,.12|e27d3b'],
@@ -158,20 +229,39 @@ const RAW = [
  ['Eyewear','Glasses','#3b5ba8','Sunglasses|29|b|.6,.12,.15|222222','Reading glasses|19|b|.6,.12,.15|b78b4b','Glasses case|12|b|.6,.15,.25|4a6fa5','Blue-light glasses|35|b|.6,.12,.15|8ab0d8'],
  ['Travel Shop','Travel','#2b7bb8','Carry-on suitcase|129|b|.6,.9,.3|3d4a5c','Neck pillow|19|t|.25,.1|9ab8d8','Packing cubes|25|b|.6,.3,.4|f29b4a','Luggage tag|8|b|.2,.3,.02|e0453a'],
  ['Sunrise Bakery','Bakery','#c97a3b','Croissant|4|t|.2,.08|e0a050','Cupcake|5|k|.2,.35|f4a6c8','Sourdough loaf|8|s|.32|c98b4a','Cookie box|12|b|.5,.15,.5|f2e6c9'],
- ['Pixel Arcade','Arcade','#6a3fd0','Token cup|10|c|.2,.3|e2b23a','Prize plush|15|s|.32|6fd0c0','Game card|20|b|.5,.6,.05|ff4f7a','Retro joystick|35|b|.4,.15,.4|222222']
+ ['Pixel Arcade','Arcade','#6a3fd0','Token cup|10|c|.2,.3|e2b23a','Prize plush|15|s|.32|6fd0c0','Game card|20|b|.5,.6,.05|ff4f7a','Retro joystick|35|b|.4,.15,.4|222222'],
+ ['Vintage Vault','Vintage','#9b6b3f','Retro jacket|45|b|.7,.8,.2|7a5a3a','Film camera|60|b|.45,.3,.2|333333','Old records|10|c|.33,.02|111111','Retro sunglasses|15|b|.6,.12,.15|c0392b'],
+ ['Skate Shop','Skate','#e0453a','Skateboard|69|b|.9,.08,.25|2b2b33','Skate helmet|35|s|.3|f2c230','Wheel set|25|c|.12,.1|f4f4f4','Skate shoes|59|b|.8,.4,.35|444444'],
+ ['Craft Corner','Crafts','#c2577a','Yarn bundle|12|s|.25|9b6bd6','Bead kit|15|b|.5,.12,.4|f2a7c3','Glue gun|14|b|.15,.35,.5|4ab0e0','Sewing kit|18|b|.5,.2,.35|e0b97a'],
+ ['Science Shop','Science','#3b8fd0','Telescope|89|c|.1,1|f4f4f4','Crystal kit|19|k|.2,.4,6|9b6bd6','Robot kit|49|b|.4,.5,.4|9aa5b1','Microscope|59|c|.12,.6|222222'],
+ ['Cozy Corner','Loungewear','#a07ac9','Fleece pajamas|29|b|.6,.4,.3|7aa0d6','Slippers|19|b|.6,.2,.3|e8d5a8','Hoodie|35|b|.7,.75,.2|555b6e','Weighted blanket|69|b|.8,.35,.6|9db1a2'],
+ ['Chocolate Works','Chocolate','#6b3e26','Truffle box|18|b|.5,.15,.5|4a2a1a','Hot cocoa kit|12|c|.2,.4|8b5e3c','Chocolate bar trio|9|b|.6,.1,.3|5b3a29','Fudge tin|15|c|.25,.15|c43c62']
 ];
-const FH = 6; // floor height
-const SLOTS = [];
-[-30,-18,-6,6,18,30].forEach(z=>{ SLOTS.push({fx:-18,fz:z,nx:-1,nz:0}); SLOTS.push({fx:18,fz:z,nx:1,nz:0}); });
-[-12,0,12].forEach(x=>{ SLOTS.push({fx:x,fz:36,nx:0,nz:1}); SLOTS.push({fx:x,fz:-36,nx:0,nz:-1}); });
-const STORES = RAW.map((r,i)=>{
-  const s = Object.assign({}, SLOTS[i%18]);
-  s.tx = s.nz; s.tz = -s.nx;
-  s.name=r[0]; s.tag=r[1]; s.color=r[2]; s.level = i<18?0:1;
-  s.items = r.slice(3).map(t=>{ const [n,p,sh,dims,c]=t.split('|'); return {n, p:+p, sh, d: dims?dims.split(',').map(Number):[], c:parseInt(c,16)}; });
-  return s;
-});
+const FH = 6, NLV = 3;
+const LEVEL_NAMES = ['Garden Level','Main Level','Upper Level'];
+const LEVEL_BLURB = ['Garden Level · turf, fountain and 7 big shops','Main Level · food court, holiday tree and 24 shops','Upper Level · skylight views and 24 shops'];
+function ringSlots(){
+  const a=[];
+  for(let k=0;k<8;k++){ const z=-31.5+9*k; a.push({fx:-18,fz:z,nx:-1,nz:0,hw:4.5}); a.push({fx:18,fz:z,nx:1,nz:0,hw:4.5}); }
+  [-13.5,-4.5,4.5,13.5].forEach(x=>{ a.push({fx:x,fz:36,nx:0,nz:1,hw:4.5}); a.push({fx:x,fz:-36,nx:0,nz:-1,hw:4.5}); });
+  return a;
+}
+const GARDEN_SLOTS = [{fx:-18,fz:-24,nx:-1,nz:0,hw:6},{fx:18,fz:-24,nx:1,nz:0,hw:6},{fx:-18,fz:0,nx:-1,nz:0,hw:6},{fx:18,fz:0,nx:1,nz:0,hw:6},{fx:-18,fz:24,nx:-1,nz:0,hw:6},{fx:18,fz:24,nx:1,nz:0,hw:6},{fx:0,fz:36,nx:0,nz:1,hw:6}];
+const STORES = [];
+function addStores(raw, slots, level){
+  raw.forEach((r,i)=>{
+    const s = Object.assign({}, slots[i]);
+    s.tx = s.nz; s.tz = -s.nx;
+    s.name=r[0]; s.tag=r[1]; s.color=r[2]; s.level=level;
+    s.items = r.slice(3).map(t=>{ const [n,p,sh,dims,c]=t.split('|'); return {n, p:+p, sh, d: dims?dims.split(',').map(Number):[], c:parseInt(c,16)}; });
+    STORES.push(s);
+  });
+}
+addStores(RAW_GARDEN, GARDEN_SLOTS, 0);
+addStores(RAW_MAIN, ringSlots(), 1);
+addStores(RAW_UPPER, ringSlots(), 2);
 
+// ================= Renderer =================
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const coarse = matchMedia('(pointer: coarse)').matches;
 const canvas = document.getElementById('c');
@@ -181,22 +271,23 @@ catch(e){ mallFail('Your browser could not start 3D graphics (WebGL).<br><br>In 
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
 renderer.outputEncoding = THREE.sRGBEncoding;
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xe9e2d6);
-scene.fog = new THREE.Fog(0xe9e2d6, 45, 110);
-const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 160);
+scene.background = new THREE.Color(0xeef1f4);
+scene.fog = new THREE.Fog(0xeef1f4, 50, 120);
+const camera = new THREE.PerspectiveCamera(70, 1, 0.1, 170);
 camera.rotation.order = 'YXZ';
-scene.add(new THREE.HemisphereLight(0xfffaf0, 0xb8a68c, 0.75));
-const sun = new THREE.DirectionalLight(0xffffff, 0.35); sun.position.set(6,20,10); scene.add(sun);
-scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+scene.add(new THREE.HemisphereLight(0xffffff, 0xc8c2b8, 0.8));
+const sun = new THREE.DirectionalLight(0xffffff, 0.38); sun.position.set(8,30,12); scene.add(sun);
+scene.add(new THREE.AmbientLight(0xffffff, 0.1));
 
-// ---------------- Static geometry batching ----------------
+// ================= Static geometry batching =================
 const colliders = [];
 function addCol(x0,x1,z0,z1,y0,y1){ colliders.push({x0,x1,z0,z1,y0,y1}); }
 const batches = new Map();
-function sbox(x,y,z,w,h,d,color,collide,glass){
-  const key = color+(glass?'g':'');
+// mode: undefined = solid, 'g' = glass, 'e' = glowing (unlit)
+function sbox(x,y,z,w,h,d,color,collide,mode){
+  const key = color+'|'+(mode||'');
   let b = batches.get(key);
-  if(!b){ b={color,glass,pos:[],nor:[],idx:[],n:0}; batches.set(key,b); }
+  if(!b){ b={color,mode,pos:[],nor:[],idx:[],n:0}; batches.set(key,b); }
   const g = new THREE.BoxGeometry(w,h,d); g.translate(x,y,z);
   const p=g.attributes.position.array, nn=g.attributes.normal.array, ix=g.index.array;
   for(let i=0;i<p.length;i++){ b.pos.push(p[i]); b.nor.push(nn[i]); }
@@ -210,171 +301,206 @@ function flushBatches(){
     g.setAttribute('position', new THREE.Float32BufferAttribute(b.pos,3));
     g.setAttribute('normal', new THREE.Float32BufferAttribute(b.nor,3));
     g.setIndex(b.idx);
-    const m = b.glass ? new THREE.MeshLambertMaterial({color:b.color, transparent:true, opacity:.28, depthWrite:false})
-                      : new THREE.MeshLambertMaterial({color:b.color});
-    const mesh = new THREE.Mesh(g,m); if(b.glass) mesh.renderOrder = 2; scene.add(mesh);
+    let m;
+    if(b.mode==='g') m = new THREE.MeshLambertMaterial({color:b.color, transparent:true, opacity:.22, depthWrite:false});
+    else if(b.mode==='e') m = new THREE.MeshBasicMaterial({color:b.color});
+    else m = new THREE.MeshLambertMaterial({color:b.color});
+    const mesh = new THREE.Mesh(g,m); if(b.mode==='g') mesh.renderOrder = 2; scene.add(mesh);
   });
   batches.clear();
+}
+function fitText(g, text, font, maxW){
+  let size = parseInt(font.match(/(\d+)px/)[1]); g.font = font;
+  while(g.measureText(text).width > maxW && size>14){ size-=2; g.font = font.replace(/\d+px/, size+'px'); }
 }
 function textTexture(text, bg, fg, w=512, h=128, font='800 64px Outfit, system-ui, sans-serif'){
   const cv = document.createElement('canvas'); cv.width=w; cv.height=h;
   const g = cv.getContext('2d');
   if(bg){ g.fillStyle=bg; g.fillRect(0,0,w,h); }
   g.fillStyle=fg; g.textAlign='center'; g.textBaseline='middle';
-  let size = parseInt(font.match(/(\d+)px/)[1]);
-  g.font = font;
-  while(g.measureText(text).width > w*0.86 && size>16){ size-=2; g.font = font.replace(/\d+px/, size+'px'); }
-  g.fillText(text, w/2, h/2+2);
+  fitText(g, text, font, w*.86); g.fillText(text, w/2, h/2+2);
   const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
   return t;
+}
+function shopSignTex(name, color){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=112; const g=cv.getContext('2d');
+  g.fillStyle='#202227'; g.fillRect(0,0,512,112);
+  g.fillStyle=color; g.beginPath(); g.arc(44,56,15,0,7); g.fill();
+  g.fillStyle='#ffffff'; g.textAlign='left'; g.textBaseline='middle';
+  fitText(g, name, '700 54px Outfit, system-ui, sans-serif', 420); g.fillText(name, 74, 58);
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; t.anisotropy=4; return t;
 }
 function signPlane(tex, w, h, x, y, z, rotY){
   const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({map:tex}));
   m.position.set(x,y,z); m.rotation.y = rotY; scene.add(m); return m;
 }
-let tileImg = null;
-function tilePlane(cx,y,cz,w,d){
-  if(!tileImg){
-    tileImg=document.createElement('canvas'); tileImg.width=tileImg.height=256; const g=tileImg.getContext('2d');
-    for(let i=0;i<4;i++)for(let j=0;j<4;j++){ g.fillStyle=(i+j)%2?'#e6dccb':'#ddd1bd'; g.fillRect(i*64,j*64,64,64); }
-    g.strokeStyle='#cbbda6'; g.lineWidth=2; for(let k=0;k<=4;k++){ g.beginPath(); g.moveTo(k*64,0); g.lineTo(k*64,256); g.moveTo(0,k*64); g.lineTo(256,k*64); g.stroke(); }
-  }
-  const t=new THREE.CanvasTexture(tileImg); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(w/8,d/8); t.encoding=THREE.sRGBEncoding;
+const texCache = {};
+function canvasTex(key, draw, size){
+  if(!texCache[key]){ const cv=document.createElement('canvas'); cv.width=cv.height=size||256; draw(cv.getContext('2d'), cv.width); texCache[key]=cv; }
+  return texCache[key];
+}
+function texPlane(key, draw, cx, y, cz, w, d, tile){
+  const img = canvasTex(key, draw);
+  const t=new THREE.CanvasTexture(img); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(w/tile,d/tile); t.encoding=THREE.sRGBEncoding; t.anisotropy=4;
   const f=new THREE.Mesh(new THREE.PlaneGeometry(w,d), new THREE.MeshLambertMaterial({map:t}));
-  f.rotation.x=-Math.PI/2; f.position.set(cx,y,cz); scene.add(f);
+  f.rotation.x=-Math.PI/2; f.position.set(cx,y,cz); scene.add(f); return f;
 }
+const drawTile = (g,s)=>{ const n=2, q=s/n; for(let i=0;i<n;i++)for(let j=0;j<n;j++){ g.fillStyle=(i+j)%2?'#ecebe8':'#e5e4e0'; g.fillRect(i*q,j*q,q,q); } g.strokeStyle='#d8d7d3'; g.lineWidth=2; for(let k=0;k<=n;k++){ g.beginPath(); g.moveTo(k*q,0); g.lineTo(k*q,s); g.moveTo(0,k*q); g.lineTo(s,k*q); g.stroke(); } };
+const drawTurf = (g,s)=>{ for(let i=0;i<8;i++){ g.fillStyle=i%2?'#5aa553':'#62b05a'; g.fillRect(0,i*s/8,s,s/8); } for(let k=0;k<1400;k++){ g.fillStyle=Math.random()<.5?'rgba(40,90,35,.18)':'rgba(170,220,140,.16)'; g.fillRect(Math.random()*s,Math.random()*s,1.5,3); } };
+const tilePlane = (cx,y,cz,w,d)=>texPlane('tile',drawTile,cx,y,cz,w,d,4);
 
-// ---------------- Building shell ----------------
-const WALL = 0xf1ebe1, CEIL = 0xf4efe6, FASCIA = 0xc9643a;
-// atrium: x -10..10, z -28..28 ; concourse ring out to x ±18, z ±36 ; shops 14 deep beyond that
+// ================= Palette =================
+const WALL=0xf7f7f5, CEIL=0xfafafa, CHAR=0x2a2c32, STEEL=0xb8bec6, GLASS=0xa9cbe0, OAK=0xe6d6bd, WOOD=0xb07a4a, LED=0xffffff;
+const WHITE = new THREE.Color(0xffffff);
+
+// ================= Building shell =================
+// footprint x -32..32, z -50..50; concourse x -18..18, z -36..36; atrium x -10..10, z -28..28
+sbox(0,-.06,0,70,.1,106,0xbdb8ae,false);
 tilePlane(0,0,0,36,72);
-sbox(0,-.06,0,70,.1,106,0xb9ab95,false);
-[[0,39,64,22],[0,-39,64,22],[-21,0,22,56],[21,0,22,56]].forEach(([x,z,w,d])=>{
-  sbox(x,FH-.15,z,w,.3,d,CEIL,false);
-  sbox(x,2*FH+.15,z,w,.3,d,CEIL,false);
-});
-tilePlane(0,FH+.01,32,36,8); tilePlane(0,FH+.01,-32,36,8); tilePlane(-14,FH+.01,0,8,56); tilePlane(14,FH+.01,0,8,56);
-sbox(0,FH-.35,28.05,20.2,.7,.12,FASCIA,false); sbox(0,FH-.35,-28.05,20.2,.7,.12,FASCIA,false);
-sbox(10.05,FH-.35,0,.12,.7,56.2,FASCIA,false); sbox(-10.05,FH-.35,0,.12,.7,56.2,FASCIA,false);
-const sky = new THREE.Mesh(new THREE.PlaneGeometry(20,56), new THREE.MeshBasicMaterial({color:0xdcefff})); sky.rotation.x=Math.PI/2; sky.position.set(0,2*FH-.02,0); scene.add(sky);
-for(let z=-24; z<=24; z+=6) sbox(0,2*FH-.1,z,20,.2,.3,0xcfc3b0,false);
-sbox(0,2*FH-.1,0,.3,.2,56,0xcfc3b0,false);
-[[-10,-28],[10,-28],[-10,28],[10,28]].forEach(([x,z])=>sbox(x,FH,z,.7,2*FH,.7,0xe2d8c8,true));
-
-// upper railings around the atrium (gaps for stairs at x -3..3 and elevators at z -1.5..1.5)
-function railSeg(x0,z0,x1,z1){
-  const cx=(x0+x1)/2, cz=(z0+z1)/2, w=Math.max(.08,Math.abs(x1-x0)), d=Math.max(.08,Math.abs(z1-z0));
-  sbox(cx,FH+.6,cz,w,1.1,d,0x9fc7e0,false,true);
-  sbox(cx,FH+1.15,cz,w+.04,.08,d+.04,0x7d8590,false);
-  addCol(Math.min(x0,x1)-.1,Math.max(x0,x1)+.1,Math.min(z0,z1)-.1,Math.max(z0,z1)+.1,FH,FH+1.3);
+texPlane('turf',drawTurf,0,.012,0,31,66,8);
+const OUTER = [[-32,32,28,50],[-32,32,-50,-28],[-32,-10,-28,28],[10,32,-28,28]];
+const ATRIUM_MAIN = [[-10,-3,-28,-1.5],[-10,-3,1.5,28],[-7,-3,-1.5,1.5],[3,10,-28,-1.5],[3,10,1.5,28],[3,7,-1.5,1.5],[-3,3,-28,-14],[-3,3,-2,2],[-3,3,14,28]];
+function slab(r,y){ const [x0,x1,z0,z1]=r; sbox((x0+x1)/2,y-.15,(z0+z1)/2,x1-x0,.3,z1-z0,CEIL,false); }
+OUTER.forEach(r=>{ slab(r,FH); slab(r,2*FH); slab(r,3*FH+.3); });
+ATRIUM_MAIN.forEach(r=>{ slab(r,FH); const [x0,x1,z0,z1]=r; tilePlane((x0+x1)/2,FH+.01,(z0+z1)/2,x1-x0,z1-z0); });
+const RING = [[-18,18,28,36],[-18,18,-36,-28],[-18,-10,-28,28],[10,18,-28,28]];
+for(let lv=1; lv<NLV; lv++) RING.forEach(([x0,x1,z0,z1])=>tilePlane((x0+x1)/2,lv*FH+.01,(z0+z1)/2,x1-x0,z1-z0));
+// LED strips under each ceiling of the concourse
+for(let lv=0; lv<NLV; lv++){
+  const yc=(lv+1)*FH-.33;
+  if(lv===0){
+    for(const x of [-14,-8,8,14]) for(const z of [-28,-20,-12,-4,4,12,20,28]) sbox(x,yc,z,2.2,.05,2.2,LED,false,'e');
+  } else {
+    sbox(-14,yc,0,.25,.05,62,LED,false,'e'); sbox(14,yc,0,.25,.05,62,LED,false,'e');
+    sbox(0,yc,32,30,.05,.25,LED,false,'e'); sbox(0,yc,-32,30,.05,.25,LED,false,'e');
+  }
 }
-railSeg(-10,-28,-10,-1.5); railSeg(-10,1.5,-10,28); railSeg(10,-28,10,-1.5); railSeg(10,1.5,10,28);
-railSeg(-10,28,-3,28); railSeg(3,28,10,28); railSeg(-10,-28,-3,-28); railSeg(3,-28,10,-28);
+// atrium edge fascia at the upper level
+[[0,28.05,20.2,.14],[0,-28.05,20.2,.14],[10.05,0,.14,56.2],[-10.05,0,.14,56.2]].forEach(([x,z,w,d])=>{
+  sbox(x,2*FH-.4,z,w,.8,d,CHAR,false);
+  sbox(x+(Math.abs(x)>0?Math.sign(x)*-.02:0),2*FH-.78,z+(Math.abs(z)>0?Math.sign(z)*-.02:0),w,.05,d,LED,false,'e');
+});
+// skylight
+const sky = new THREE.Mesh(new THREE.PlaneGeometry(20,56), new THREE.MeshBasicMaterial({color:0xdaeeff})); sky.rotation.x=Math.PI/2; sky.position.set(0,3*FH-.02,0); scene.add(sky);
+for(let z=-24; z<=24; z+=4) sbox(0,3*FH-.12,z,20,.18,.18,CHAR,false);
+sbox(0,3*FH-.12,0,.2,.2,56,CHAR,false);
+// full-height columns at the atrium corners
+[[-10,-28],[10,-28],[-10,28],[10,28]].forEach(([x,z])=>sbox(x,1.5*FH,z,.8,3*FH,.8,WALL,true));
 
-// ---------------- Stairs ----------------
-// north stair x -3..3 from z 16 (ground) up to z 28 (level 2); south mirrored
-const STAIRS = [{z0:16, dir:1},{z0:-16, dir:-1}];
+// railings: upper level around the atrium; main level around the stair openings
+function railSeg(x0,z0,x1,z1,y){
+  const cx=(x0+x1)/2, cz=(z0+z1)/2, w=Math.max(.06,Math.abs(x1-x0)), d=Math.max(.06,Math.abs(z1-z0));
+  sbox(cx,y+.58,cz,w,1.06,d,GLASS,false,'g');
+  sbox(cx,y+1.13,cz,w+.05,.07,d+.05,STEEL,false);
+  addCol(Math.min(x0,x1)-.1,Math.max(x0,x1)+.1,Math.min(z0,z1)-.1,Math.max(z0,z1)+.1,y,y+1.3);
+}
+const YU=2*FH;
+railSeg(-10,-28,-10,-1.5,YU); railSeg(-10,1.5,-10,28,YU); railSeg(10,-28,10,-1.5,YU); railSeg(10,1.5,10,28,YU);
+railSeg(-10,28,-3,28,YU); railSeg(3,28,10,28,YU); railSeg(-10,-28,-3,-28,YU); railSeg(3,-28,10,-28,YU);
+railSeg(-3,2,3,2,FH); railSeg(-3,-2,3,-2,FH);
+[[-3.02,2,-3.02,14],[3.02,2,3.02,14],[-3.02,-2,-3.02,-14],[3.02,-2,3.02,-14]].forEach(([x0,z0,x1,z1])=>{
+  sbox(x0,FH+.58,(z0+z1)/2,.06,1.06,12,GLASS,false,'g'); sbox(x0,FH+1.13,(z0+z1)/2,.1,.07,12,STEEL,false);
+});
+
+// ================= Stairs =================
+// Garden -> Main: z 2..14 (north) and -2..-14 (south); Main -> Upper: z 16..28 and -16..-28. Landings at z ±14..±16.
+const STAIRS = [{z0:2,dir:1,y0:0},{z0:16,dir:1,y0:FH},{z0:-2,dir:-1,y0:0},{z0:-16,dir:-1,y0:FH}];
+const muralTex = (function(){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=512; const g=cv.getContext('2d');
+  const gr=g.createLinearGradient(0,0,512,512); gr.addColorStop(0,'#202227'); gr.addColorStop(1,'#33363e'); g.fillStyle=gr; g.fillRect(0,0,512,512);
+  g.fillStyle='#e4572e'; g.fillRect(56,352,400,10);
+  g.fillStyle='#ffffff'; g.textAlign='center'; g.textBaseline='middle';
+  g.font='800 96px Outfit, system-ui, sans-serif'; g.fillText('Lantern',256,165); g.fillStyle='#f3a183'; g.fillText('Court',256,262);
+  g.fillStyle='#ffffff'; g.font='600 32px Inter, system-ui, sans-serif'; g.fillText('55 shops · 3 levels',256,420);
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; return t;
+})();
 STAIRS.forEach(st=>{
   for(let i=0;i<24;i++){
     const top=(i+1)*.25, zc = st.z0 + st.dir*(i*.5+.25);
-    sbox(0,top/2,zc,6,top,.5, i%2?0xd9cdb9:0xe3d8c6, false);
+    sbox(0,st.y0+top/2,zc,6,top,.5, i%2?0xdedcd7:0xe9e7e2, false);
+    sbox(0,st.y0+top-.01,zc-st.dir*.23,6,.03,.05,CHAR,false);
   }
-  const zEnd = st.z0 + st.dir*12;
-  addCol(-3.15,-2.95,Math.min(st.z0,zEnd),Math.max(st.z0,zEnd),0,FH+1.4);
-  addCol(2.95,3.15,Math.min(st.z0,zEnd),Math.max(st.z0,zEnd),0,FH+1.4);
-  addCol(-3,3,Math.min(zEnd,zEnd-.6*st.dir),Math.max(zEnd,zEnd-.6*st.dir),0,FH-.6);
+  const zEnd = st.z0 + st.dir*12, zlo=Math.min(st.z0,zEnd), zhi=Math.max(st.z0,zEnd);
+  addCol(-3.15,-2.95,zlo,zhi,st.y0,st.y0+FH+1.4);
+  addCol(2.95,3.15,zlo,zhi,st.y0,st.y0+FH+1.4);
+  addCol(-3,3,Math.min(zEnd,zEnd-.3*st.dir),Math.max(zEnd,zEnd-.3*st.dir),st.y0,st.y0+FH-.6);
   const len=Math.hypot(12,6), ang=Math.atan2(6,12);
   [-3.05,3.05].forEach(x=>{
-    const skirt = new THREE.Mesh(new THREE.BoxGeometry(.12,1.2,len), new THREE.MeshLambertMaterial({color:0x9fc7e0,transparent:true,opacity:.35,depthWrite:false}));
-    skirt.position.set(x,3+.6,st.z0+st.dir*6); skirt.rotation.x = -st.dir*ang; skirt.renderOrder=2; scene.add(skirt);
-    const hr = new THREE.Mesh(new THREE.BoxGeometry(.1,.1,len), new THREE.MeshLambertMaterial({color:0x7d8590}));
-    hr.position.set(x,3+1.2,st.z0+st.dir*6); hr.rotation.x = -st.dir*ang; scene.add(hr);
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(.06,1.1,len), new THREE.MeshLambertMaterial({color:GLASS,transparent:true,opacity:.28,depthWrite:false}));
+    skirt.position.set(x,st.y0+3+.55,st.z0+st.dir*6); skirt.rotation.x = -st.dir*ang; skirt.renderOrder=2; scene.add(skirt);
+    const hr = new THREE.Mesh(new THREE.BoxGeometry(.08,.08,len), new THREE.MeshLambertMaterial({color:STEEL}));
+    hr.position.set(x,st.y0+3+1.12,st.z0+st.dir*6); hr.rotation.x = -st.dir*ang; scene.add(hr);
   });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(5.6,5.4), new THREE.MeshBasicMaterial({map:muralTex}));
+  m.position.set(0,st.y0+2.85,zEnd+st.dir*.02); m.rotation.y = st.dir>0 ? 0 : Math.PI; scene.add(m);
 });
-// mural on the tall back end of each staircase
-(function(){
-  const cv=document.createElement('canvas'); cv.width=512; cv.height=512; const g=cv.getContext('2d');
-  g.fillStyle='#1f1b2e'; g.fillRect(0,0,512,512);
-  g.fillStyle='#d9572b'; g.fillRect(0,360,512,12);
-  g.fillStyle='#ffffff'; g.textAlign='center'; g.textBaseline='middle';
-  g.font='800 92px Outfit, system-ui, sans-serif'; g.fillText('Lantern',256,170); g.fillStyle='#f0a37f'; g.fillText('Court',256,265);
-  g.fillStyle='#ffffff'; g.font='600 34px Inter, system-ui, sans-serif'; g.fillText('36 shops · 2 levels',256,430);
-  const tex=new THREE.CanvasTexture(cv); tex.encoding=THREE.sRGBEncoding;
-  STAIRS.forEach(st=>{
-    const zEnd = st.z0 + st.dir*12;
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(5.6,5.6), new THREE.MeshBasicMaterial({map:tex}));
-    m.position.set(0,2.9,zEnd+st.dir*.02); m.rotation.y = st.dir>0 ? 0 : Math.PI; scene.add(m);
-  });
-})();
-function stairHeight(x,z){
-  if(x<-3||x>3) return -1;
-  for(const st of STAIRS){
-    const t = (z-st.z0)*st.dir;
-    if(t>=0 && t<=12) return Math.max(0,Math.min(FH,t/12*FH));
-  }
-  return -1;
-}
 
-// ---------------- Elevators ----------------
-const ELEV = [1,-1].map(s=>({s, y:0, target:0, moving:false}));
-const elevTex = textTexture('Elevator','#1f1b2e','#ffffff',256,96,'700 52px Outfit, system-ui, sans-serif');
+// ================= Elevators =================
+const ELEV = [1,-1].map(s=>({s, y:FH, target:FH, moving:false}));
+const elevTex = textTexture('Elevator','#202227','#ffffff',256,96,'700 50px Outfit, system-ui, sans-serif');
 ELEV.forEach(e=>{
-  const s=e.s, xi=s*7, xo=s*10, xc=s*8.5;
-  sbox(xi,FH,0,.08,2*FH,3,0x9fc7e0,true,true);
-  sbox(xc,FH,-1.5,3,2*FH,.08,0x9fc7e0,true,true);
-  sbox(xc,FH,1.5,3,2*FH,.08,0x9fc7e0,true,true);
-  [[xi,-1.5],[xi,1.5],[xo,-1.5],[xo,1.5]].forEach(([x,z])=>sbox(x,FH,z,.18,2*FH,.18,0x5d6470,false));
-  sbox(xc,2*FH-.2,0,3.2,.4,3.2,0x5d6470,false);
-  for(let lv=0;lv<2;lv++){
-    signPlane(elevTex,1.6,.6, s*10.12, lv*FH+4.1, 0, s*Math.PI/2);
-    sbox(s*10.05,lv*FH+3.6,0,.06,.12,3,FASCIA,false);
+  const s=e.s, xi=s*7, xo=s*10, xc=s*8.5, H=3*FH;
+  sbox(xi,H/2,0,.06,H,3,GLASS,true,'g');
+  sbox(xc,H/2,-1.5,3,H,.06,GLASS,true,'g');
+  sbox(xc,H/2,1.5,3,H,.06,GLASS,true,'g');
+  [[xi,-1.5],[xi,1.5],[xo,-1.5],[xo,1.5]].forEach(([x,z])=>sbox(x,H/2,z,.16,H,.16,CHAR,false));
+  sbox(xc,H-.2,0,3.2,.4,3.2,CHAR,false);
+  for(let lv=0;lv<NLV;lv++){
+    signPlane(elevTex,1.5,.56, s*10.12, lv*FH+4.2, 0, s*Math.PI/2);
+    sbox(s*10.05,lv*FH+3.75,0,.06,.1,3,LED,false,'e');
   }
   const cab = new THREE.Group();
-  const floor = new THREE.Mesh(new THREE.BoxGeometry(2.9,.16,2.9), new THREE.MeshLambertMaterial({color:0x4a505c})); floor.position.y=-.08; cab.add(floor);
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(2.9,.12,2.9), new THREE.MeshLambertMaterial({color:0x4a505c})); roof.position.y=2.9; cab.add(roof);
-  const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.6,.04,1.6), new THREE.MeshBasicMaterial({color:0xfff3d6})); lamp.position.y=2.83; cab.add(lamp);
-  const bar = new THREE.Mesh(new THREE.BoxGeometry(.06,.06,2.6), new THREE.MeshLambertMaterial({color:0xc9ced4})); bar.position.set(-s*1.3,1,0); cab.add(bar);
-  cab.position.set(xc,0,0); scene.add(cab); e.mesh=cab;
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(2.9,.16,2.9), new THREE.MeshLambertMaterial({color:0x3a3d45})); floor.position.y=-.08; cab.add(floor);
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(2.9,.12,2.9), new THREE.MeshLambertMaterial({color:0x3a3d45})); roof.position.y=2.9; cab.add(roof);
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(1.8,.04,1.8), new THREE.MeshBasicMaterial({color:0xfff6e6})); lamp.position.y=2.83; cab.add(lamp);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(.06,.06,2.6), new THREE.MeshLambertMaterial({color:STEEL})); bar.position.set(-s*1.3,1,0); cab.add(bar);
+  cab.position.set(xc,e.y,0); scene.add(cab); e.mesh=cab;
 });
 function inCab(e,x,z){ const lo=Math.min(e.s*7,e.s*10), hi=Math.max(e.s*7,e.s*10); return x>lo && x<hi && z>-1.5 && z<1.5; }
 
-// ---------------- Shops ----------------
+// ================= Shops =================
 const clickables = [], spinners = [];
 const fmt = n => '$'+n;
 function L(sh,u,v){ return [sh.fx + sh.tx*u + sh.nx*v, sh.fz + sh.tz*u + sh.nz*v]; }
-function lbox(sh,u,v,yc,lu,lv,h,color,collide){ const [x,z]=L(sh,u,v); const ax=sh.nx!==0; sbox(x,yc,z, ax?lv:lu, h, ax?lu:lv, color, collide); }
-const WHITE = new THREE.Color(0xffffff);
+function lbox(sh,u,v,yc,lu,lv,h,color,collide,mode){ const [x,z]=L(sh,u,v); const ax=sh.nx!==0; sbox(x,yc,z, ax?lv:lu, h, ax?lu:lv, color, collide, mode); }
 STORES.forEach(st=>{
-  const y0 = st.level*FH, col = new THREE.Color(st.color), acc = col.getHex();
-  const pastel = col.clone().lerp(WHITE,.8).getHex();
-  const floorTint = col.clone().lerp(new THREE.Color(0xe6dccb),.82).getHex();
-  const dark = col.clone().lerp(new THREE.Color(0x222222),.25).getHex();
-  lbox(st,-4.25,0,y0+3,3.5,.3,6,WALL,true);
-  lbox(st, 4.25,0,y0+3,3.5,.3,6,WALL,true);
-  lbox(st,0,0,y0+5,5,.3,2,WALL,false);
-  lbox(st,-6,7,y0+3,.3,14,6,pastel,true);
-  lbox(st, 6,7,y0+3,.3,14,6,pastel,true);
-  lbox(st,0,14,y0+3,12,.3,6,pastel,true);
-  lbox(st,0,7,y0+.025,11.7,13.7,.05,floorTint,false);
-  lbox(st,-2.55,0,y0+2,.2,.42,4,acc,false); lbox(st,2.55,0,y0+2,.2,.42,4,acc,false); lbox(st,0,0,y0+4.05,5.3,.42,.12,acc,false);
-  lbox(st,0,13.3,y0+1.3,10,1,2.6,0xffffff,true);
-  lbox(st,0,12.75,y0+.75,9.6,.1,.08,acc,false); lbox(st,0,12.75,y0+1.65,9.6,.1,.08,acc,false);
-  lbox(st,-4,11.6,y0+.55,2.6,1,1.1,dark,true);
-  const tex = textTexture(st.name, st.color, '#ffffff');
+  const y0 = st.level*FH, hw = st.hw, dw = hw>5 ? 2.5 : 2;
+  const col = new THREE.Color(st.color), acc = col.getHex();
+  const feature = col.clone().lerp(WHITE,.62).getHex();
+  const segL = hw-dw, segC = (hw+dw)/2;
+  [-1,1].forEach(sg=>{
+    lbox(st,sg*segC,0,y0+2.1,segL,.06,4.2,GLASS,true,'g');
+    lbox(st,sg*segC,0,y0+.12,segL,.2,.24,CHAR,false);
+    lbox(st,sg*dw,0,y0+2.1,.12,.22,4.2,CHAR,false);
+    lbox(st,sg*hw,0,y0+3,.3,.3,6,CHAR,false);
+  });
+  lbox(st,0,0,y0+5.1,2*hw,.36,1.8,CHAR,false);
+  lbox(st,0,-.2,y0+4.22,2*hw-.4,.05,.05,acc,false,'e');
+  lbox(st,-hw,7,y0+3,.3,14,6,WALL,true);
+  lbox(st, hw,7,y0+3,.3,14,6,WALL,true);
+  lbox(st,0,14,y0+3,2*hw,.3,6,feature,true);
+  lbox(st,0,7,y0+.025,2*hw-.3,13.7,.05,OAK,false);
+  lbox(st,0,7,y0+5.93,2*hw-3,6,.04,LED,false,'e');
+  lbox(st,0,13.3,y0+1.3,2*hw-2,1,2.6,0xffffff,true);
+  lbox(st,0,12.78,y0+.8,2*hw-2.4,.05,.06,acc,false); lbox(st,0,12.78,y0+1.7,2*hw-2.4,.05,.06,acc,false);
+  lbox(st,-(hw-1.8),11.6,y0+.53,2.2,1,1.06,CHAR,true); lbox(st,-(hw-1.8),11.6,y0+1.09,2.3,1.1,.06,WOOD,false);
+  const tex = shopSignTex(st.name, st.color);
   const rot = Math.atan2(-st.nx,-st.nz);
-  let [sx,sz] = L(st,0,-.17); signPlane(tex,4.8,1.2,sx,y0+5,sz,rot);
-  [sx,sz] = L(st,0,13.82); signPlane(tex,5.4,1.35,sx,y0+4.2,sz,rot);
-  const spots = [[-2.8,4.5],[2.8,4.5],[-2.8,9],[2.8,9]];
+  let [sx,sz] = L(st,0,-.2); signPlane(tex,Math.min(2*hw-1.2,5.6),1.15,sx,y0+5.15,sz,rot);
+  [sx,sz] = L(st,0,13.83); signPlane(tex,Math.min(2*hw-2,5.4),1.1,sx,y0+4.2,sz,rot);
+  const pu = hw>5 ? 2.8 : 2.1;
+  const spots = [[-pu,4.5],[pu,4.5],[-pu,9],[pu,9]];
   st.items.forEach((it,i)=>{
     const [u,v] = spots[i]; const [px,pz] = L(st,u,v);
-    lbox(st,u,v,y0+.5,1.4,1.4,1,0xffffff,true);
-    lbox(st,u,v,y0+1.025,1.46,1.46,.05,acc,false);
+    it.u=u; it.v=v; it.i=i; it.st=st;
+    lbox(st,u,v,y0+.5,1.3,1.3,1,0xffffff,true);
+    lbox(st,u,v,y0+1.02,1.34,1.34,.04,acc,false);
     const d=it.d; let geo, h=0, mesh;
     if(it.sh==='p'){
       mesh = new THREE.Group();
-      const pot = new THREE.Mesh(new THREE.CylinderGeometry(.22,.17,.3,16), new THREE.MeshLambertMaterial({color:0xc9683f})); pot.position.y=.15; mesh.add(pot);
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(.22,.17,.3,16), new THREE.MeshLambertMaterial({color:0xd9d4cc})); pot.position.y=.15; mesh.add(pot);
       const leaf = new THREE.Mesh(new THREE.SphereGeometry(.3,14,10), new THREE.MeshLambertMaterial({color:0x3f9a4f})); leaf.position.y=.5; mesh.add(leaf);
-      mesh.position.set(px,y0+1.05,pz); h=.8;
+      mesh.position.set(px,y0+1.04,pz); h=.8;
       mesh.children.forEach(ch=>{ ch.userData={item:it,store:st,root:mesh}; clickables.push(ch); });
     } else {
       if(it.sh==='b'){ geo=new THREE.BoxGeometry(d[0],d[1],d[2]); h=d[1]; }
@@ -383,60 +509,163 @@ STORES.forEach(st=>{
       else if(it.sh==='k'){ geo=new THREE.ConeGeometry(d[0],d[1],d[2]||22); h=d[1]; }
       else { geo=new THREE.TorusGeometry(d[0],d[1],10,28); h=2*(d[0]+d[1]); }
       mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({color:it.c}));
-      mesh.position.set(px,y0+1.05+h/2,pz);
+      mesh.position.set(px,y0+1.04+h/2,pz);
       mesh.userData={item:it,store:st,root:mesh}; clickables.push(mesh);
     }
     scene.add(mesh); spinners.push(mesh);
-    it.mesh = mesh; it.i = i; it.st = st; it.topY = y0+1.05+h;
-    const tag = new THREE.Sprite(new THREE.SpriteMaterial({map:textTexture(fmt(it.p),'#1f1b2e','#ffffff',192,80,'700 50px Outfit, system-ui, sans-serif')}));
-    tag.scale.set(.6,.25,1); tag.position.set(px,y0+1.05+h+.4,pz); scene.add(tag);
+    it.mesh = mesh; it.topY = y0+1.04+h;
+    const tag = new THREE.Sprite(new THREE.SpriteMaterial({map:textTexture(fmt(it.p),'#202227','#ffffff',192,80,'700 50px Outfit, system-ui, sans-serif')}));
+    tag.scale.set(.56,.23,1); tag.position.set(px,it.topY+.38,pz); scene.add(tag);
   });
 });
-
-// ---------------- Atrium: fountain + food court ----------------
-const stone = 0xd5cab8;
-const basin = new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.6,.6,40), new THREE.MeshLambertMaterial({color:stone})); basin.position.set(0,.3,0); scene.add(basin);
-const water = new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.05,40), new THREE.MeshLambertMaterial({color:0x6fb6d8})); water.position.set(0,.56,0); scene.add(water);
-const col1 = new THREE.Mesh(new THREE.CylinderGeometry(.25,.35,1.8,20), new THREE.MeshLambertMaterial({color:stone})); col1.position.set(0,1.2,0); scene.add(col1);
-const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.9,.3,.3,30), new THREE.MeshLambertMaterial({color:stone})); bowl.position.set(0,2.1,0); scene.add(bowl);
-addCol(-2.6,2.6,-2.6,2.6,0,3);
-const umb = [0xd9572b,0x2e8a57,0x2f6fd0,0xe0a21b];
-[[-5,-7],[5,-7],[-5,7],[5,7],[-5,-11.5],[5,-11.5],[-5,11.5],[5,11.5]].forEach(([x,z],i)=>{
-  sbox(x,.75,z,1.2,.08,1.2,0xffffff,true); sbox(x,.37,z,.15,.74,.15,0x555555,false);
-  [[0,-.95],[0,.95],[-.95,0],[.95,0]].forEach(([dx,dz])=>{ sbox(x+dx,.45,z+dz,.5,.08,.5,umb[i%4],false); sbox(x+dx,.22,z+dz,.08,.44,.08,0x555555,false); });
-  const u = new THREE.Mesh(new THREE.ConeGeometry(1.2,.5,8), new THREE.MeshLambertMaterial({color:umb[i%4]})); u.position.set(x,2.45,z); scene.add(u);
-  sbox(x,1.5,z,.06,1.9,.06,0x888888,false);
+// Garden Level: plain walls (with living-wall panels) where there are no shops
+[[-18,-36,-30],[-18,-18,-6],[-18,6,18],[-18,30,36],[18,-36,-30],[18,-18,-6],[18,6,18],[18,30,36]].forEach(([x,z0,z1])=>{
+  sbox(x,3,(z0+z1)/2,.3,6,z1-z0,WALL,true);
+  if(z1-z0>8) sbox(x-Math.sign(x)*.2,2.6,(z0+z1)/2,.15,3.6,z1-z0-2,0x4f8f4a,false);
 });
-const upTex = textTexture('Stairs to Level 2','#1f1b2e','#ffffff');
-signPlane(upTex,3.6,.9, 0,4.6,15.95, Math.PI); signPlane(upTex,3.6,.9, 0,4.6,-15.95, 0);
-const fcTex = textTexture('Food Court','#2e8a57','#ffffff');
-signPlane(fcTex,3.2,.8, 0,3.6,15.95, Math.PI); signPlane(fcTex,3.2,.8, 0,3.6,-15.95, 0);
+[[-18,-6],[6,18]].forEach(([x0,x1])=>{ sbox((x0+x1)/2,3,36,x1-x0,6,.3,WALL,true); sbox((x0+x1)/2,2.6,35.8,x1-x0-2,3.6,.15,0x4f8f4a,false); });
+sbox(0,3,-36,36,6,.3,WALL,true);
+sbox(0,2.6,-35.8,30,3.6,.15,0x4f8f4a,false);
+const gardenTex = textTexture('Garden Level','#2e7d4a','#ffffff',512,128);
+signPlane(gardenTex,6,1.5,0,4.3,-35.7,0);
 
-for(let lv=0; lv<2; lv++){
-  const y=lv*FH;
-  [[-14,-18],[14,-18],[-14,18],[14,18]].forEach(([x,z])=>{ sbox(x,y+.45,z,.7,.12,2.4,0x8a5a3b,true); sbox(x,y+.2,z-1,.6,.4,.15,0x444444,false); sbox(x,y+.2,z+1,.6,.4,.15,0x444444,false); });
-  [[-14,-8],[14,-8],[-14,8],[14,8],[-14,-32],[14,-32],[-14,32],[14,32]].forEach(([x,z])=>{
-    sbox(x,y+.4,z,1,.8,1,0xb9a88f,true);
-    const t = new THREE.Mesh(new THREE.SphereGeometry(.7,12,9), new THREE.MeshLambertMaterial({color:0x4f9a5a})); t.position.set(x,y+1.35,z); scene.add(t);
-  });
+// ================= Garden Level: fountain, benches, trees =================
+const stoneMat = new THREE.MeshLambertMaterial({color:0xdcd8d0});
+function fountain(x,y,z){
+  const basin = new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.6,.6,40), stoneMat); basin.position.set(x,y+.3,z); scene.add(basin);
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.2,.05,40), new THREE.MeshLambertMaterial({color:0x6fb6d8})); water.position.set(x,y+.56,z); scene.add(water);
+  const c1 = new THREE.Mesh(new THREE.CylinderGeometry(.25,.35,1.8,20), stoneMat); c1.position.set(x,y+1.2,z); scene.add(c1);
+  const bowl = new THREE.Mesh(new THREE.CylinderGeometry(.9,.3,.3,30), stoneMat); bowl.position.set(x,y+2.1,z); scene.add(bowl);
+  addCol(x-2.6,x+2.6,z-2.6,z+2.6,y,y+3);
+  return water;
 }
-[[-7,-20],[7,-20],[-7,20],[7,20]].forEach(([x,z])=>{
-  sbox(x,.45,z,1.8,.9,1.8,0xb9a88f,true);
-  const tr = new THREE.Mesh(new THREE.CylinderGeometry(.15,.2,3,8), new THREE.MeshLambertMaterial({color:0x7a5a3a})); tr.position.set(x,2.2,z); scene.add(tr);
-  const cr = new THREE.Mesh(new THREE.SphereGeometry(1.5,14,10), new THREE.MeshLambertMaterial({color:0x4a9152})); cr.position.set(x,4.2,z); scene.add(cr);
+const fountainWater = fountain(0,0,24);
+function bench(x,y,z,alongZ){
+  const w=alongZ?.7:2.4, d=alongZ?2.4:.7;
+  sbox(x,y+.45,z,w,.1,d,WOOD,true);
+  sbox(x+(alongZ?(.3):0),y+.75,z+(alongZ?0:.3),alongZ?.08:2.4,.5,alongZ?2.4:.08,WOOD,false);
+  if(alongZ){ sbox(x,y+.2,z-1,.6,.4,.1,CHAR,false); sbox(x,y+.2,z+1,.6,.4,.1,CHAR,false); }
+  else { sbox(x-1,y+.2,z,.1,.4,.6,CHAR,false); sbox(x+1,y+.2,z,.1,.4,.6,CHAR,false); }
+}
+function tree(x,y,z,big){
+  const s = big?1.25:1;
+  sbox(x,y+.4,z,1.6*s,.8,1.6*s,CHAR,true);
+  const tr = new THREE.Mesh(new THREE.CylinderGeometry(.13*s,.18*s,2.6*s,8), new THREE.MeshLambertMaterial({color:0x7a5a3a})); tr.position.set(x,y+.8+1.3*s,z); scene.add(tr);
+  const cr = new THREE.Mesh(new THREE.SphereGeometry(1.3*s,14,10), new THREE.MeshLambertMaterial({color:0x4f9a52})); cr.position.set(x,y+.8+2.6*s+.6,z); scene.add(cr);
+}
+function planter(x,y,z){
+  sbox(x,y+.4,z,1,.8,1,CHAR,true);
+  const t = new THREE.Mesh(new THREE.SphereGeometry(.62,12,9), new THREE.MeshLambertMaterial({color:0x58a05a})); t.position.set(x,y+1.25,z); scene.add(t);
+}
+[[-7.5,-26],[7.5,-26],[-7.5,-18],[7.5,-18],[-7.5,18],[7.5,18]].forEach(([x,z])=>bench(x,0,z,true));
+[[-11,-6],[11,-6],[-11,6],[11,6]].forEach(([x,z])=>bench(x,0,z,false));
+[[-11,-14],[11,-14],[-11,14],[11,14],[-11,-30],[11,-30],[-11,30],[11,30]].forEach(([x,z])=>tree(x,0,z,false));
+
+// ================= Main Level: food court + holiday tree =================
+const umb = [0xe4572e,0x2e8a57,0x2f6fd0,0xe0a21b];
+[[-6,-7],[6,-7],[-6,7],[6,7],[-6,-11],[6,-11],[-6,11],[6,11]].forEach(([x,z],i)=>{
+  const y=FH;
+  sbox(x,y+.75,z,1.2,.06,1.2,0xffffff,true); sbox(x,y+.37,z,.12,.74,.12,CHAR,false);
+  [[0,-.95],[0,.95],[-.95,0],[.95,0]].forEach(([dx,dz])=>{ sbox(x+dx,y+.45,z+dz,.48,.06,.48,umb[i%4],false); sbox(x+dx,y+.22,z+dz,.06,.44,.06,CHAR,false); });
+  const u = new THREE.Mesh(new THREE.ConeGeometry(1.15,.45,10), new THREE.MeshLambertMaterial({color:umb[i%4]})); u.position.set(x,y+2.45,z); scene.add(u);
+  sbox(x,y+1.5,z,.05,1.9,.05,STEEL,false);
 });
+[[-7,-20],[7,-20],[-7,20],[7,20]].forEach(([x,z])=>tree(x,FH,z,true));
+const xmasLights = (function(){
+  const y=FH, g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,1.2,10), new THREE.MeshLambertMaterial({color:0x6b4a2b})); trunk.position.y=y+.6; g.add(trunk);
+  const green = new THREE.MeshLambertMaterial({color:0x2c7a49});
+  for(let i=0;i<5;i++){ const c=new THREE.Mesh(new THREE.ConeGeometry(1.85-i*.33,2.4,22), green); c.position.y=y+1.9+i*1.45; g.add(c); }
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(.42), new THREE.MeshBasicMaterial({color:0xffd34d})); star.position.y=y+9.1; g.add(star);
+  scene.add(g); addCol(-1.9,1.9,-1.9,1.9,FH,3*FH);
+  const n=110, pos=new Float32Array(n*3), cols=new Float32Array(n*3), pal=[[1,.82,.3],[1,.35,.3],[.4,.7,1],[1,1,1]];
+  for(let i=0;i<n;i++){ const t=Math.random(), h=1.0+t*7.4, r=(1-t)*1.8+.15, a=Math.random()*Math.PI*2;
+    pos[i*3]=Math.cos(a)*r; pos[i*3+1]=y+h; pos[i*3+2]=Math.sin(a)*r; const p=pal[i%4]; cols[i*3]=p[0]; cols[i*3+1]=p[1]; cols[i*3+2]=p[2]; }
+  const geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setAttribute('color',new THREE.BufferAttribute(cols,3));
+  const pts=new THREE.Points(geo,new THREE.PointsMaterial({size:.22,vertexColors:true})); scene.add(pts);
+  [[1.5,.9,0xc0392b],[-1.4,1.1,0x2f6fd0],[.4,-1.6,0xe0a21b],[-.6,1.6,0x2e8a57],[1.1,-1.2,0x8e44ad]].forEach(([x,z,c])=>sbox(x*1.15,FH+.25,z*1.15,.55,.5,.55,c,false));
+  return pts;
+})();
+const fcTex = textTexture('Food Court','#2e7d4a','#ffffff');
+signPlane(fcTex,3.4,.85, 0,FH+4.4,15.95, Math.PI); signPlane(fcTex,3.4,.85, 0,FH+4.4,-15.95, 0);
+const downTex = textTexture('Stairs down to the Garden','#202227','#ffffff');
+signPlane(downTex,3.4,.85, 0,FH+3.3,15.95, Math.PI); signPlane(downTex,3.4,.85, 0,FH+3.3,-15.95, 0);
+// hanging banners in the atrium
+function bannerTex(lines, bg){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=768; const g=cv.getContext('2d');
+  g.fillStyle=bg; g.fillRect(0,0,256,768); g.fillStyle='rgba(255,255,255,.9)'; g.fillRect(28,700,200,6);
+  g.fillStyle='#fff'; g.textAlign='center'; g.textBaseline='middle';
+  lines.forEach((l,i)=>{ g.font=(i===0?'800 54px ':'600 30px ')+'Outfit, system-ui, sans-serif'; fitText(g,l,g.font,220); g.fillText(l,128,150+i*(i===0?0:70)+(i>0?90:0)); });
+  const t=new THREE.CanvasTexture(cv); t.encoding=THREE.sRGBEncoding; return t;
+}
+const banners = [bannerTex(['Find it','Type it in','the search bar','up top'],'#e4572e'), bannerTex(['Holidays','55 shops','3 levels','1 tree'],'#2e7d4a'), bannerTex(['Garden','Turf, fountain','and benches','downstairs'],'#2f6fd0')];
+[[-9.6,-12,0],[9.6,-12,1],[-9.6,12,2],[9.6,12,0],[-9.6,-22,1],[9.6,22,2]].forEach(([x,z,k])=>{
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1.7,5.1), new THREE.MeshBasicMaterial({map:banners[k], side:THREE.DoubleSide}));
+  m.position.set(x,2*FH+3.2,z); m.rotation.y = x<0 ? Math.PI/2 : -Math.PI/2; scene.add(m);
+  sbox(x,2*FH+5.85,z,.06,.06,1.9,CHAR,false);
+});
+// ring benches + planters on the Main and Upper levels
+for(let lv=1; lv<NLV; lv++){
+  const y=lv*FH;
+  [[-14,-18],[14,-18],[-14,18],[14,18]].forEach(([x,z])=>bench(x,y,z,true));
+  [[-14,-8],[14,-8],[-14,8],[14,8],[-13,-31],[13,-31],[-13,31],[13,31]].forEach(([x,z])=>planter(x,y,z));
+}
 flushBatches();
 
-// ---------------- Player + physics ----------------
-const player = {x:0, z:-13.5, y:0, vy:0, yaw:Math.PI, pitch:0.1};
+// ================= Shoppers =================
+const SKIN=[0xf1c9a5,0xd9a37c,0xa86e47,0x7a4a2c,0xf5d7c0], SHIRT=[0xe4572e,0x2f6fd0,0x2e8a57,0xe0a21b,0x8e44ad,0x1fa58a,0xf05a8c,0x34495e,0xffffff], PANTS=[0x2c3e50,0x3b4a6b,0x6b5b4a,0x222222,0x7a8a9a];
+const bodyGeo=new THREE.CylinderGeometry(.2,.26,.78,10), headGeo=new THREE.SphereGeometry(.17,12,10), legGeo=new THREE.BoxGeometry(.13,.78,.15), hairGeo=new THREE.SphereGeometry(.175,12,8,0,Math.PI*2,0,Math.PI/2);
+const PEOPLE=[];
+function addPeople(level, hx, hz, n){
+  const P = 4*hx+4*hz;
+  for(let i=0;i<n;i++){
+    const g=new THREE.Group(), r=Math.random;
+    const shirt=new THREE.MeshLambertMaterial({color:SHIRT[(i*3+level)%SHIRT.length]}), pants=new THREE.MeshLambertMaterial({color:PANTS[(i+level)%PANTS.length]});
+    const b=new THREE.Mesh(bodyGeo,shirt); b.position.y=1.17; g.add(b);
+    const h=new THREE.Mesh(headGeo,new THREE.MeshLambertMaterial({color:SKIN[(i+level*2)%SKIN.length]})); h.position.y=1.72; g.add(h);
+    const hair=new THREE.Mesh(hairGeo,new THREE.MeshLambertMaterial({color:[0x2b1d14,0x5a3a22,0xc9a15a,0x111111][i%4]})); hair.position.y=1.74; g.add(hair);
+    const l1=new THREE.Mesh(legGeo,pants), l2=new THREE.Mesh(legGeo,pants);
+    l1.geometry=legGeo; l1.position.set(-.09,.39,0); l2.position.set(.09,.39,0); g.add(l1); g.add(l2);
+    const sc=.92+r()*.16; g.scale.setScalar(sc);
+    scene.add(g);
+    PEOPLE.push({g,l1,l2,level,hx,hz,P,s:(i/n)*P+r()*3,speed:(1+r()*.45)*(i%2?1:-1),off:(r()-.5)*1.2,ph:r()*6});
+  }
+}
+function pathAt(p,s){
+  const {hx,hz,P}=p; s=((s%P)+P)%P;
+  const a=2*hx, b=2*hz;
+  if(s<a) return [-hx+s,-hz];
+  if(s<a+b) return [hx,-hz+(s-a)];
+  if(s<2*a+b) return [hx-(s-a-b),hz];
+  return [-hx,hz-(s-2*a-b)];
+}
+addPeople(0,14.5,32,9); addPeople(1,16,33.5,12); addPeople(2,16,33.5,10);
+function updatePeople(dt,t){
+  for(const p of PEOPLE){
+    p.s += p.speed*dt;
+    const [x,z]=pathAt(p,p.s), [x2,z2]=pathAt(p,p.s+Math.sign(p.speed)*.5);
+    const dx=x2-x, dz=z2-z, len=Math.hypot(dx,dz)||1;
+    const ox=-dz/len*p.off, oz=dx/len*p.off;
+    p.g.position.set(x+ox, p.level*FH, z+oz);
+    p.g.rotation.y=Math.atan2(dx,dz);
+    const sw=Math.sin(t*6.5+p.ph)*.45;
+    p.l1.rotation.x=sw; p.l2.rotation.x=-sw;
+  }
+}
+
+// ================= Player + physics =================
+const player = {x:0, z:-15, y:FH, vy:0, yaw:Math.PI, pitch:.12};
 const R = .4;
-const lvl = () => player.y > FH/2 ? 1 : 0;
+const lvl = () => Math.max(0, Math.min(NLV-1, Math.round(player.y/FH)));
 function inAtrium(x,z){ return x>-10 && x<10 && z>-28 && z<28; }
+function inShaft(x,z){ const ax=Math.abs(x); return ax>7 && ax<10 && z>-1.5 && z<1.5; }
+function inHole(x,z){ return x>-3 && x<3 && ((z>2&&z<14)||(z>-14&&z<-2)); }
 function surfaceAt(x,z,y){
   let best = 0;
   const cand = h => { if(h<=y+.7 && h>best) best=h; };
-  if(!inAtrium(x,z)) cand(FH);
-  const sh = stairHeight(x,z); if(sh>=0) cand(sh);
+  if(!inShaft(x,z) && !inHole(x,z)) cand(FH);
+  if(!inAtrium(x,z)) cand(2*FH);
+  if(x>-3 && x<3) for(const st of STAIRS){ const t=(z-st.z0)*st.dir; if(t>=0 && t<=12) cand(st.y0+t/2); }
   for(const e of ELEV) if(inCab(e,x,z)) cand(e.y);
   return best;
 }
@@ -446,7 +675,7 @@ function blocked(x,z){
   for(const e of ELEV){
     const dx = e.s*10;
     if(x+R>dx-.1 && x-R<dx+.1 && z+R>-1.5 && z-R<1.5){
-      for(let k=0;k<2;k++){ if((e.moving || Math.abs(e.y-k*FH)>.01) && y1>k*FH && y0<k*FH+FH) return true; }
+      for(let k=0;k<NLV;k++){ if((e.moving || Math.abs(e.y-k*FH)>.01) && y1>k*FH && y0<k*FH+FH) return true; }
     }
   }
   return false;
@@ -456,20 +685,21 @@ function move(dx,dz){
   if(!blocked(player.x, player.z+dz)) player.z+=dz;
 }
 
+// ================= Input =================
 const keys = {};
-let curAction = null;
+let curActs = [];
 addEventListener('keydown', e=>{
   if(e.target.tagName==='INPUT') return;
   if(e.target.closest && e.target.closest('#card a,button')) return;
-  if(e.key==='/'){ e.preventDefault(); toggleSearch(true); return; }
+  if(e.key==='/'){ e.preventDefault(); searchInput.focus(); return; }
   keys[e.code]=true;
-  if(e.code==='Escape'){ closeCard(); toggleDir(false); toggleSearch(false); }
-  if(e.code==='KeyE' && curAction) curAction.run();
+  if(e.code==='Escape'){ closeCard(); toggleDir(false); showDrop(false); }
+  if(e.code==='KeyE'){ const a=curActs.find(a=>a.hint==='E'); if(a) a.run(); }
+  if(/^Digit[123]$/.test(e.code)){ const k=+e.code.slice(5)-1; const a=curActs.find(a=>a.k===k); if(a) a.run(); }
 });
 addEventListener('keyup', e=>{ keys[e.code]=false; });
 addEventListener('blur', ()=>{ for(const k in keys) keys[k]=false; });
 
-// ---------------- Pointer ----------------
 const ray = new THREE.Raycaster(); ray.far = 14;
 const ndc = new THREE.Vector2();
 function pick(cx,cy){
@@ -483,7 +713,7 @@ const pointers = new Map();
 let stickVec = {x:0,y:0};
 const stickEl = document.getElementById('stick'), knob = document.getElementById('knob');
 canvas.addEventListener('pointerdown', e=>{
-  canvas.focus({preventScroll:true});
+  canvas.focus({preventScroll:true}); showDrop(false); searchInput.blur();
   const touchMove = e.pointerType==='touch' && e.clientX < innerWidth/2 && e.clientY > innerHeight*.35;
   pointers.set(e.pointerId, {sx:e.clientX, sy:e.clientY, lx:e.clientX, ly:e.clientY, t:performance.now(), mode: touchMove?'stick':'look', moved:0});
   if(touchMove){ stickEl.style.left=e.clientX+'px'; stickEl.style.top=e.clientY+'px'; stickEl.hidden=false; }
@@ -534,14 +764,14 @@ function hover(x,y){
 function hideTip(){ tip.hidden=true; }
 canvas.addEventListener('pointerleave', ()=>{ hideTip(); setHover(null); });
 
-// ---------------- Card ----------------
+// ================= Product card =================
 const card = document.getElementById('card');
 function openCard(it, st){
   const cs = document.getElementById('cardStore');
-  cs.textContent = st.name+' · Level '+(st.level+1); cs.style.color = st.color;
+  cs.textContent = st.name+' · '+LEVEL_NAMES[st.level]; cs.style.color = st.color;
   document.getElementById('cardName').textContent = it.n;
   document.getElementById('cardPrice').textContent = fmt(it.p);
-  document.getElementById('cardDesc').textContent = st.tag+' at '+st.name+', on Level '+(st.level+1)+' of Lantern Court.';
+  document.getElementById('cardDesc').textContent = st.tag+' at '+st.name+', on the '+LEVEL_NAMES[st.level]+' of Lantern Court.';
   const a = document.getElementById('cardLink');
   a.href = 'https://www.amazon.com/s?k='+encodeURIComponent(it.n);
   a.style.background = st.color;
@@ -550,10 +780,10 @@ function openCard(it, st){
 function closeCard(){ card.hidden = true; }
 document.getElementById('close').addEventListener('click', ()=>{ closeCard(); canvas.focus(); });
 
-// ---------------- Directory ----------------
+// ================= Directory =================
 const dir = document.getElementById('dir'), dirBtn = document.getElementById('dirBtn');
-[0,1].forEach(lv=>{
-  const h=document.createElement('h3'); h.textContent='Level '+(lv+1); dir.appendChild(h);
+for(let lv=NLV-1; lv>=0; lv--){
+  const h=document.createElement('h3'); h.textContent=LEVEL_NAMES[lv]; dir.appendChild(h);
   const ul=document.createElement('ul'); dir.appendChild(ul);
   STORES.filter(s=>s.level===lv).slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(st=>{
     const li=document.createElement('li'); const b=document.createElement('button'); b.className='go';
@@ -566,91 +796,74 @@ const dir = document.getElementById('dir'), dirBtn = document.getElementById('di
     });
     li.appendChild(b); ul.appendChild(li);
   });
-});
-function toggleDir(v){ dir.hidden = !v; dirBtn.setAttribute('aria-expanded', String(v)); if(v) toggleSearch(false); }
+}
+function toggleDir(v){ dir.hidden = !v; dirBtn.setAttribute('aria-expanded', String(v)); if(v) showDrop(false); }
 dirBtn.addEventListener('click', ()=> toggleDir(dir.hidden));
 
-// ---------------- Elevator action button ----------------
-const actBtn = document.getElementById('act');
+// ================= Elevator buttons =================
+const actionsEl = document.getElementById('actions');
 let lastActKey = '';
-actBtn.addEventListener('click', ()=>{ if(curAction) curAction.run(); canvas.focus(); });
 function sendElev(e, y){ if(e.moving || Math.abs(e.y-y)<.01) return; e.target=y; e.moving=true; }
-function nearDoor(e){ return Math.abs(player.x-e.s*11.2)<1.8 && Math.abs(player.z)<2.2; }
+function nearDoor(e){ return Math.abs(player.x-e.s*11.4)<2.4 && Math.abs(player.z)<2.4 && Math.abs(player.y-lvl()*FH)<.3; }
 function updateAction(){
-  let a = null;
+  let acts=[], key='';
   const L0 = lvl();
   for(const e of ELEV){
-    if(e.moving && (inCab(e,player.x,player.z) || nearDoor(e))){ a={key:'mv',label:'Elevator moving…',disabled:true}; break; }
-    if(!e.moving && inCab(e,player.x,player.z) && Math.abs(player.y-e.y)<.3){
-      const to = e.y<FH/2 ? FH : 0;
-      a={key:'ride'+e.s+to,label:'Ride to Level '+(to?2:1),run:()=>sendElev(e,to)}; break;
+    const inside = inCab(e,player.x,player.z) && Math.abs(player.y-e.y)<.5;
+    if(e.moving && (inside || nearDoor(e))){ acts=[{label:'Elevator moving…',disabled:true}]; key='mv'; break; }
+    if(!e.moving && inside){
+      const cur = Math.round(e.y/FH);
+      acts = [0,1,2].filter(k=>k!==cur).reverse().map(k=>({label:'Go to '+LEVEL_NAMES[k], hint:String(k+1), k, run:()=>sendElev(e,k*FH)}));
+      key='ride'+e.s+cur; break;
     }
-    if(!e.moving && nearDoor(e) && Math.abs(e.y-L0*FH)>.01){
-      a={key:'call'+e.s+L0,label:'Call elevator',run:()=>sendElev(e,L0*FH)}; break;
-    }
+    if(!e.moving && nearDoor(e) && Math.abs(e.y-L0*FH)>.01){ acts=[{label:'Call elevator', hint:'E', run:()=>sendElev(e,L0*FH)}]; key='call'+e.s+L0; break; }
   }
-  curAction = a && !a.disabled ? a : null;
-  const k = a ? a.key : '';
-  if(k!==lastActKey){
-    lastActKey=k;
-    if(!a){ actBtn.hidden=true; }
-    else {
-      actBtn.hidden=false; actBtn.disabled=!!a.disabled; actBtn.textContent=a.label;
-      if(!a.disabled && !coarse){ const kb=document.createElement('kbd'); kb.textContent='E'; actBtn.appendChild(kb); }
-    }
+  curActs = acts.filter(a=>!a.disabled);
+  if(key!==lastActKey){
+    lastActKey=key; actionsEl.innerHTML='';
+    acts.forEach(a=>{
+      const b=document.createElement('button'); b.className='act'; b.textContent=a.label; b.disabled=!!a.disabled;
+      if(!a.disabled && !coarse && a.hint){ const kb=document.createElement('kbd'); kb.textContent=a.hint; b.appendChild(kb); }
+      if(a.run) b.addEventListener('click',()=>{ a.run(); canvas.focus(); });
+      actionsEl.appendChild(b);
+    });
   }
 }
 
-// ---------------- Search ----------------
+// ================= Search =================
 const KW = {
- 'Sneaker Shop':'shoes sneakers footwear running sport athlete kid teen adult',
- 'Tech Store':'tech electronics headphones audio music computer gadget teen adult gamer student',
- 'Game Store':'games gaming gamer video console kid teen board family',
- 'Book Nook':'books reading reader novel student adult teacher',
- 'Toy Shop':'toys kid play lego building car fun',
- 'Home Goods':'home cozy decor house mom grandma adult housewarming',
- 'Phone Hub':'phone mobile tech gadget teen adult',
- 'Sports Locker':'sports soccer basketball tennis ball athlete kid teen fitness outdoor',
- 'Pet Pantry':'pets dog cat puppy kitten animal',
- 'Candy Jar':'candy sweets chocolate treat snack stocking stuffer kid',
- 'Music Box':'music musician instrument guitar piano drums band teen',
- 'Kitchen Corner':'kitchen cooking cook chef baking mom dad adult housewarming',
- 'Art Supply':'art artist drawing painting creative craft kid teen',
- 'Outdoor Outfitters':'outdoors outdoor camping hiking nature adventure dad',
- 'Beauty Bar':'beauty makeup skincare selfcare teen mom',
- 'Watch & Jewelry':'jewelry watch wife girlfriend mom anniversary fancy',
- 'Kids Closet':'kids clothes clothing kid child baby',
- 'Party Store':'party birthday decorations celebration kid',
- 'Denim Depot':'clothes clothing fashion jeans teen adult',
- 'Hat Rack':'hats fashion clothing winter summer',
- 'Backpack Base':'bags backpack school student travel teen',
- 'Garden Center':'garden plants gardening grandma mom nature',
- 'Camera Corner':'camera photography photo photographer creative',
- 'Hobby Hangar':'hobby hobbies drone puzzle model chess dad kid teen brain',
- 'Comic Vault':'comics manga superhero teen kid reader',
- 'Bike Shop':'bikes bike cycling biking kid teen outdoor',
- 'Office Supply':'office school student stationery work teacher',
- 'Tea & Coffee':'coffee tea drinks dad mom coworker teacher',
- 'Bath & Body':'bath spa selfcare relax mom grandma cozy',
- 'Lamp & Light':'lights lighting lamp room decor teen cozy',
- 'Card & Gift':'card birthday wrapping',
- 'Fitness Gear':'fitness gym workout exercise yoga athlete',
- 'Eyewear':'glasses sunglasses eyewear summer',
- 'Travel Shop':'travel trip vacation traveler luggage',
- 'Sunrise Bakery':'bakery food treat snack dessert',
- 'Pixel Arcade':'arcade games gamer kid teen fun'
+ 'Fresh Market':'grocery food fruit flowers snack healthy','Lantern Cinema':'movies movie film popcorn date night fun','Buddy Workshop':'plush stuffed animal teddy kid build',
+ 'Turf & Track':'sports soccer football athlete team kid teen','Nest Furniture':'furniture home room decor cozy housewarming adult','Scoops Ice Cream':'ice cream dessert treat sweet kid',
+ 'Byte Electronics':'electronics tech computer laptop tv tablet console gamer adult teen',
+ 'Sneaker Shop':'shoes sneakers footwear running sport athlete kid teen adult','Tech Store':'tech electronics headphones audio music computer gadget teen adult gamer student',
+ 'Game Store':'games gaming gamer video console kid teen board family','Book Nook':'books reading reader novel student adult teacher','Toy Shop':'toys kid play lego building car fun',
+ 'Home Goods':'home cozy decor house mom grandma adult housewarming','Phone Hub':'phone mobile tech gadget teen adult','Sports Locker':'sports soccer basketball tennis ball athlete kid teen fitness outdoor',
+ 'Pet Pantry':'pets dog cat puppy kitten animal','Candy Jar':'candy sweets chocolate treat snack stocking stuffer kid','Music Box':'music musician instrument guitar piano drums band teen',
+ 'Kitchen Corner':'kitchen cooking cook chef baking mom dad adult housewarming','Art Supply':'art artist drawing painting creative craft kid teen','Outdoor Outfitters':'outdoors outdoor camping hiking nature adventure dad',
+ 'Beauty Bar':'beauty makeup skincare selfcare teen mom','Watch & Jewelry':'jewelry watch wife girlfriend mom anniversary fancy','Kids Closet':'kids clothes clothing kid child baby',
+ 'Party Store':'party birthday decorations celebration kid','Bloom Florist':'flowers mom grandma girlfriend wife anniversary valentine','Brick Lab':'lego building kid teen toys',
+ 'Smoothie Bar':'drinks smoothie healthy snack','Sock Spot':'socks stocking stuffer cozy funny clothing','Puzzle Palace':'puzzles brain games family','Sound Shack':'music audio headphones speaker vinyl teen adult',
+ 'Denim Depot':'clothes clothing fashion jeans teen adult','Hat Rack':'hats fashion clothing winter summer','Backpack Base':'bags backpack school student travel teen',
+ 'Garden Center':'garden plants gardening grandma mom nature','Camera Corner':'camera photography photo photographer creative','Hobby Hangar':'hobby hobbies drone puzzle model chess dad kid teen brain',
+ 'Comic Vault':'comics manga superhero teen kid reader','Bike Shop':'bikes bike cycling biking kid teen outdoor','Office Supply':'office school student stationery work teacher',
+ 'Tea & Coffee':'coffee tea drinks dad mom coworker teacher','Bath & Body':'bath spa selfcare relax mom grandma cozy','Lamp & Light':'lights lighting lamp room decor teen cozy',
+ 'Card & Gift':'card birthday wrapping','Fitness Gear':'fitness gym workout exercise yoga athlete','Eyewear':'glasses sunglasses eyewear summer',
+ 'Travel Shop':'travel trip vacation traveler luggage','Sunrise Bakery':'bakery food treat snack dessert','Pixel Arcade':'arcade games gamer kid teen fun',
+ 'Vintage Vault':'vintage retro thrift fashion clothing','Skate Shop':'skate skateboard teen kid outdoor','Craft Corner':'crafts craft diy art creative knitting sewing',
+ 'Science Shop':'science stem kid teen space robot','Cozy Corner':'cozy pajamas loungewear slippers comfy','Chocolate Works':'chocolate candy sweets treat dessert mom stocking'
 };
-const ISYN = {earbuds:'headphones audio', headset:'headphones audio', speaker:'audio music bluetooth', keyboard:'computer typing',
+const ISYN = {earbuds:'headphones audio', headset:'headphones audio', headphones:'audio', speaker:'audio music bluetooth', keyboard:'computer typing',
   watch:'smartwatch', plush:'stuffed animal', bear:'stuffed animal teddy', kite:'outdoor', tent:'camping', bricks:'lego',
   controller:'gamepad', blanket:'cozy', candle:'cozy', mug:'coffee', necklace:'jewelry', ring:'jewelry', earrings:'jewelry',
   helmet:'safety', puzzle:'brain', chess:'strategy brain', drone:'flying tech', guitar:'music', ukulele:'music', piano:'music',
   basketball:'ball', soccer:'ball', lotion:'skincare', bombs:'spa', towel:'spa', jeans:'pants', beanie:'hat winter', cap:'hat',
-  croissant:'pastry', cupcake:'dessert', cookie:'dessert', fudge:'dessert', chocolate:'dessert'};
+  croissant:'pastry', cupcake:'dessert', cookie:'dessert', fudge:'dessert', chocolate:'dessert', tv:'television screen', laptop:'computer',
+  popcorn:'snack', cleats:'shoes soccer', jersey:'shirt soccer', skateboard:'skate', telescope:'space science', slippers:'cozy', hoodie:'cozy sweatshirt'};
 const TOKSYN = {boy:'kid', girl:'kid', son:'kid', daughter:'kid', child:'kid', children:'kid', toddler:'kid', nephew:'kid', niece:'kid',
   teenager:'teen', mother:'mom', mum:'mom', father:'dad', grandmother:'grandma', grandpa:'grandma', grandparent:'grandma',
-  grandfather:'grandma', headphone:'headphones', football:'soccer', sneaker:'sneakers', game:'games', gaming:'games'};
-const STOP = new Set('a an the for to of and or in on at with my me i we need want find get buy some something who that likes like loves love into is are it old year years yr yrs gift present good best nice cool idea ideas under below over above less more than up max min cheap around about him her them their his between price priced dollar dollars cost spend budget someone anyone person people shopping shop store looking ideas please'.split(' ').map(w=>w.length>3&&w.endsWith('s')&&!w.endsWith('ss')?w.slice(0,-1):w));
+  grandfather:'grandma', headphone:'headphones', football:'soccer', sneaker:'sneakers', game:'games', gaming:'games', television:'tv'};
 const stem = w => w.length>3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0,-1) : w;
+const STOP = new Set(('a an the for to of and or in on at with my me i we need want find get buy some something who that likes like loves love into is are it old year years yr yrs gift gifts present presents good best nice cool idea ideas under below over above less more than up max min cheap around about him her them their his between price priced dollar dollars cost spend budget someone anyone person people shopping shop store looking please').split(' ').map(stem));
 const words = s => s.toLowerCase().replace(/[^a-z0-9 ]+/g,' ').split(/\s+/).filter(Boolean).map(stem);
 STORES.forEach(st=>{
   st._name = words(st.name+' '+st.tag); st._kw = words(KW[st.name]||'');
@@ -688,60 +901,51 @@ function runSearch(q){
   if(res.length){ const cut=Math.ceil(res[0].sc/3); res=res.filter(r=>r.sc>=cut); }
   return {res, toks, min, max};
 }
-
-const searchPanel = document.getElementById('search'), searchBtn = document.getElementById('searchBtn');
-const searchInput = document.getElementById('searchInput'), resultsEl = document.getElementById('results');
+const sbar = document.getElementById('sbar'), searchInput = document.getElementById('searchInput');
+const dropEl = document.getElementById('search'), resultsEl = document.getElementById('results');
 const summaryEl = document.getElementById('summary'), clearBtn = document.getElementById('clearBtn');
-let matched = [], lastQuery = '';
-const EXAMPLES = ['Gift for a 12-year-old who likes soccer under $30','Headphones','Cozy gifts under $25','Something for a gamer','Gifts for mom under $20','Stocking stuffers under $10'];
+let matched = [];
+const EXAMPLES = ['Gift for a 12-year-old who likes soccer under $30','Headphones','Cozy gifts under $25','Something for a gamer','Gifts for mom under $20','Stocking stuffers under $10','Ice cream'];
 const exEl = document.getElementById('examples');
-EXAMPLES.forEach(x=>{ const b=document.createElement('button'); b.textContent=x; b.addEventListener('click',()=>{ searchInput.value=x; doSearch(x); }); exEl.appendChild(b); });
-function toggleSearch(v){
-  searchPanel.hidden = !v; searchBtn.setAttribute('aria-expanded', String(v));
-  if(v){ dir.hidden=true; dirBtn.setAttribute('aria-expanded','false'); closeCard(); setTimeout(()=>{ try{ searchInput.focus(); searchInput.select(); }catch(_){} },0); }
-}
-searchBtn.addEventListener('click', ()=> toggleSearch(searchPanel.hidden));
-clearBtn.addEventListener('click', ()=>{ clearSearch(); canvas.focus(); });
-function clearSearch(){ searchInput.value=''; doSearch(''); }
+EXAMPLES.forEach(x=>{ const b=document.createElement('button'); b.type='button'; b.textContent=x; b.addEventListener('click',()=>{ searchInput.value=x; doSearch(x); }); exEl.appendChild(b); });
+function showDrop(v){ dropEl.hidden = !v; if(v){ toggleDirSilent(); } }
+function toggleDirSilent(){ dir.hidden=true; dirBtn.setAttribute('aria-expanded','false'); }
+searchInput.addEventListener('focus', ()=>{ showDrop(true); closeCard(); });
 let debounce=0;
-searchInput.addEventListener('input', ()=>{ clearTimeout(debounce); debounce=setTimeout(()=>doSearch(searchInput.value),140); });
-searchInput.addEventListener('keydown', e=>{
-  if(e.key==='Enter'){ e.preventDefault(); doSearch(searchInput.value); if(matched.length) goTo(matched[0]); }
-  if(e.key==='Escape'){ toggleSearch(false); canvas.focus(); }
-});
+searchInput.addEventListener('input', ()=>{ clearTimeout(debounce); debounce=setTimeout(()=>doSearch(searchInput.value),140); showDrop(true); });
+searchInput.addEventListener('keydown', e=>{ if(e.key==='Escape'){ showDrop(false); searchInput.blur(); canvas.focus(); } });
+sbar.addEventListener('submit', e=>{ e.preventDefault(); const r=doSearch(searchInput.value); if(r.length) goTo(r[0].it); });
+clearBtn.addEventListener('click', ()=>{ searchInput.value=''; doSearch(''); searchInput.focus(); });
 function doSearch(q){
-  q = q.trim(); lastQuery = q;
+  q = q.trim();
   resultsEl.innerHTML=''; matched=[];
-  if(!q){ summaryEl.hidden=true; clearBtn.hidden=true; searchBtn.textContent='Search'; return []; }
+  if(!q){ summaryEl.hidden=true; clearBtn.hidden=true; return []; }
   const {res,min,max} = runSearch(q);
   matched = res.slice(0,12).map(r=>r.it);
   const shops = new Set(res.map(r=>r.st.name)).size;
   let price = '';
   if(min>0 && max<Infinity) price=' between $'+min+' and $'+max; else if(max<Infinity) price=' under $'+max; else if(min>0) price=' over $'+min;
   summaryEl.hidden=false;
-  summaryEl.textContent = res.length ? res.length+' match'+(res.length>1?'es':'')+price+' in '+shops+' shop'+(shops>1?'s':'')+'. Glowing items have arrows over them.'
+  summaryEl.textContent = res.length ? res.length+' match'+(res.length>1?'es':'')+price+' in '+shops+' shop'+(shops>1?'s':'')+'. They glow in the mall with arrows above them. Pick one to walk right to it.'
     : 'Nothing matched'+price+'. Try a thing (headphones), a person (mom, a 10-year-old) or an interest (soccer, cooking).';
   res.slice(0,30).forEach(r=>{
-    const li=document.createElement('li'); const b=document.createElement('button'); b.className='res';
+    const li=document.createElement('li'); const b=document.createElement('button'); b.type='button'; b.className='res';
     b.innerHTML='<span class="sw"></span><b></b><span class="pr"></span><small></small>';
     b.children[0].style.background=r.st.color; b.children[1].textContent=r.it.n; b.children[2].textContent=fmt(r.it.p);
-    b.children[3].textContent=r.st.name+' · Level '+(r.st.level+1);
+    b.children[3].textContent=r.st.name+' · '+LEVEL_NAMES[r.st.level];
     b.addEventListener('click',()=>goTo(r.it));
     li.appendChild(b); resultsEl.appendChild(li);
   });
   clearBtn.hidden = false;
-  searchBtn.textContent = 'Search: '+(q.length>18?q.slice(0,17)+'…':q);
   return res;
 }
-const SPOTS = [[-2.8,4.5],[2.8,4.5],[-2.8,9],[2.8,9]];
 function goTo(it){
-  const st=it.st, [u,v]=SPOTS[it.i], [x,z]=L(st,u*.6,v-3.7);
+  const st=it.st, [x,z]=L(st,it.u*.6,it.v-3.7);
   player.x=x; player.z=z; player.y=st.level*FH; player.vy=0;
-  player.yaw=Math.atan2(-st.nx,-st.nz) + Math.atan2(u*.4,3.7); player.pitch=-0.12;
-  toggleSearch(false); toggleDir(false); openCard(it, st); canvas.focus();
+  player.yaw=Math.atan2(-st.nx,-st.nz) + Math.atan2(it.u*.4,3.7); player.pitch=-0.12;
+  showDrop(false); searchInput.blur(); toggleDir(false); openCard(it, st); canvas.focus();
 }
-// highlight markers
-const markerMat = new THREE.MeshBasicMaterial({color:0xd9572b});
+const markerMat = new THREE.MeshBasicMaterial({color:0xe4572e});
 const markers = [];
 for(let i=0;i<12;i++){ const m=new THREE.Mesh(new THREE.ConeGeometry(.22,.45,14), markerMat); m.rotation.x=Math.PI; m.visible=false; scene.add(m); markers.push(m); }
 const glowCol = new THREE.Color();
@@ -756,11 +960,11 @@ function updateSearchFx(t){
   markers.forEach((m,i)=>{
     const it = matched[i];
     if(!it){ m.visible=false; return; }
-    m.visible=true; m.position.set(it.mesh.position.x, it.topY+.95+Math.sin(t*3+i)*.12, it.mesh.position.z);
+    m.visible=true; m.position.set(it.mesh.position.x, it.topY+.9+Math.sin(t*3+i)*.12, it.mesh.position.z);
   });
 }
 
-// ---------------- Minimap ----------------
+// ================= Minimap =================
 const map = document.getElementById('map'), mg = map.getContext('2d');
 function drawMap(){
   const W=map.width, H=map.height, pad=10, s=Math.min((W-2*pad)/64,(H-2*pad)/100);
@@ -768,14 +972,16 @@ function drawMap(){
   const X = x=> ox+(x+32)*s, Z = z=> oz+(z+50)*s;
   const lv = lvl();
   mg.clearRect(0,0,W,H);
-  mg.fillStyle='#efe6d8'; mg.fillRect(X(-18),Z(-36),36*s,72*s);
-  if(lv===1){ mg.fillStyle='#dcefff'; mg.fillRect(X(-10),Z(-28),20*s,56*s); }
-  else { mg.fillStyle='#e4dccd'; mg.fillRect(X(-10),Z(-28),20*s,56*s); mg.fillStyle='#6fb6d8'; mg.beginPath(); mg.arc(X(0),Z(0),2.4*s,0,7); mg.fill(); }
-  mg.fillStyle='#bfb19a'; mg.fillRect(X(-3),Z(16),6*s,12*s); mg.fillRect(X(-3),Z(-28),6*s,12*s);
-  mg.fillStyle='#5d6470'; ELEV.forEach(e=>mg.fillRect(X(Math.min(e.s*7,e.s*10)),Z(-1.5),3*s,3*s));
+  mg.fillStyle='#eceef1'; mg.fillRect(X(-18),Z(-36),36*s,72*s);
+  if(lv===0){ mg.fillStyle='#8cc985'; mg.fillRect(X(-15.5),Z(-33),31*s,66*s); mg.fillStyle='#6fb6d8'; mg.beginPath(); mg.arc(X(0),Z(24),2.4*s,0,7); mg.fill(); }
+  else if(lv===1){ mg.fillStyle='#e2ddd3'; mg.fillRect(X(-10),Z(-28),20*s,56*s); mg.fillStyle='#2c7a49'; mg.beginPath(); mg.arc(X(0),Z(0),1.9*s,0,7); mg.fill(); }
+  else { mg.fillStyle='#d6ebfb'; mg.fillRect(X(-10),Z(-28),20*s,56*s); }
+  mg.fillStyle='#b9b6ae';
+  STAIRS.forEach(st=>{ if(st.y0===lv*FH || st.y0+FH===lv*FH){ const z0=Math.min(st.z0,st.z0+st.dir*12); mg.fillRect(X(-3),Z(z0),6*s,12*s); } });
+  mg.fillStyle='#3a3d45'; ELEV.forEach(e=>mg.fillRect(X(Math.min(e.s*7,e.s*10)),Z(-1.5),3*s,3*s));
   STORES.forEach(st=>{
     if(st.level!==lv) return;
-    const a=L(st,-6,0), b=L(st,6,14);
+    const a=L(st,-st.hw,0), b=L(st,st.hw,14);
     const x0=Math.min(a[0],b[0]), x1=Math.max(a[0],b[0]), z0=Math.min(a[1],b[1]), z1=Math.max(a[1],b[1]);
     mg.fillStyle = st.color+'40'; mg.fillRect(X(x0),Z(z0),(x1-x0)*s,(z1-z0)*s);
     mg.strokeStyle = st.color; mg.lineWidth=1.5; mg.strokeRect(X(x0)+1,Z(z0)+1,(x1-x0)*s-2,(z1-z0)*s-2);
@@ -783,32 +989,38 @@ function drawMap(){
   matched.forEach(it=>{
     const mx=X(it.mesh.position.x), mz=Z(it.mesh.position.z);
     mg.beginPath(); mg.arc(mx,mz,4,0,7);
-    if(it.st.level===lv){ mg.fillStyle='#d9572b'; mg.fill(); } else { mg.strokeStyle='#d9572b'; mg.lineWidth=1.5; mg.stroke(); }
+    if(it.st.level===lv){ mg.fillStyle='#e4572e'; mg.fill(); } else { mg.strokeStyle='#e4572e'; mg.lineWidth=1.5; mg.stroke(); }
   });
   const px=X(player.x), pz=Z(player.z);
   const fx=-Math.sin(player.yaw), fz=-Math.cos(player.yaw), an=Math.atan2(fz,fx);
-  mg.fillStyle='rgba(217,87,43,.3)'; mg.beginPath(); mg.moveTo(px,pz); mg.arc(px,pz,22,an-.5,an+.5); mg.closePath(); mg.fill();
-  mg.fillStyle='#1f1b2e'; mg.beginPath(); mg.arc(px,pz,5,0,7); mg.fill(); mg.strokeStyle='#fff'; mg.lineWidth=2; mg.stroke();
+  mg.fillStyle='rgba(228,87,46,.3)'; mg.beginPath(); mg.moveTo(px,pz); mg.arc(px,pz,22,an-.5,an+.5); mg.closePath(); mg.fill();
+  mg.fillStyle='#1c1d22'; mg.beginPath(); mg.arc(px,pz,5,0,7); mg.fill(); mg.strokeStyle='#fff'; mg.lineWidth=2; mg.stroke();
 }
 
-// ---------------- HUD: level + where ----------------
-const where = document.getElementById('where'), levelChip = document.getElementById('level');
-let lastWhere='', lastLvl=-1;
+// ================= HUD: level, where, toast, welcome =================
+const where = document.getElementById('where'), levelChip = document.getElementById('level'), toast = document.getElementById('toast');
+let lastWhere='', lastLvl=-1, toastTimer=0;
+function showToast(msg){ toast.textContent=msg; toast.hidden=false; toast.style.opacity='1'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ toast.style.opacity='0'; setTimeout(()=>{ toast.hidden=true; },320); },2600); }
 function updateWhere(){
   const lv = lvl();
-  if(lv!==lastLvl){ lastLvl=lv; levelChip.textContent='Level '+(lv+1); }
+  if(lv!==lastLvl){ if(lastLvl>=0 && Math.abs(player.y-lv*FH)<.05) showToast(LEVEL_BLURB[lv]); if(Math.abs(player.y-lv*FH)<.05 || lastLvl<0){ lastLvl=lv; levelChip.textContent=LEVEL_NAMES[lv]; } }
   let txt='';
   for(const st of STORES){
     if(st.level!==lv) continue;
     const dx=player.x-st.fx, dz=player.z-st.fz, v=dx*st.nx+dz*st.nz, u=dx*st.tx+dz*st.tz;
-    if(v>0.2 && v<14 && Math.abs(u)<6){ txt='In '+st.name; break; }
+    if(v>0.2 && v<14 && Math.abs(u)<st.hw){ txt='In '+st.name; break; }
   }
-  if(!txt && lv===0 && inAtrium(player.x,player.z) && Math.abs(player.z)<14) txt='Food Court';
+  if(!txt && lv===1 && inAtrium(player.x,player.z) && Math.abs(player.z)<14) txt='Food Court';
+  if(!txt && lv===0 && Math.abs(player.x)<15.5 && Math.abs(player.z)<33) txt='On the turf';
   if(txt!==lastWhere){ lastWhere=txt; where.hidden=!txt; where.textContent=txt; }
 }
+const welcome = document.getElementById('welcome');
+let seen=false; try{ seen = localStorage.getItem('lc.welcome.v3')==='1'; }catch(_){}
+if(!seen) welcome.hidden=false;
+document.getElementById('startBtn').addEventListener('click', ()=>{ welcome.hidden=true; try{ localStorage.setItem('lc.welcome.v3','1'); }catch(_){} canvas.focus(); });
 if(coarse) document.getElementById('help').textContent = 'Left thumb to walk · drag right side to look · tap a product';
 
-// ---------------- Loop ----------------
+// ================= Loop =================
 function resize(){ const w=innerWidth, h=innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
 let last = performance.now(), t = 0;
@@ -817,7 +1029,7 @@ function step(dt){
   for(const e of ELEV){
     if(e.moving){
       const riding = inCab(e,player.x,player.z) && Math.abs(player.y-e.y)<.5;
-      const st = 2.6*dt*Math.sign(e.target-e.y);
+      const st = 2.8*dt*Math.sign(e.target-e.y);
       if(Math.abs(e.target-e.y)<=Math.abs(st)){ e.y=e.target; e.moving=false; } else e.y+=st;
       if(riding){ player.y=e.y; player.vy=0; }
     }
@@ -840,7 +1052,12 @@ function step(dt){
   else { player.y = ground; player.vy = 0; }
   camera.position.set(player.x, player.y + 1.65 + (len>.05 ? Math.sin(t*9)*.03 : 0), player.z);
   camera.rotation.set(player.pitch, player.yaw, 0);
-  if(!reduceMotion) for(const m of spinners) m.rotation.y += dt*.6;
+  if(!reduceMotion){
+    for(const m of spinners) m.rotation.y += dt*.6;
+    updatePeople(dt,t);
+    xmasLights.material.size = .2 + .05*Math.sin(t*3);
+    fountainWater.position.y = .56 + Math.sin(t*2)*.01;
+  }
 }
 function frame(now){
   const dt = Math.min(.05,(now-last)/1000); last=now;
@@ -850,8 +1067,9 @@ function frame(now){
   drawMap(); updateWhere(); updateAction();
   requestAnimationFrame(frame);
 }
+if(reduceMotion) updatePeople(0,0);
 // test hook: lets an automated check drive the player and render a frame
-window.__mall = {player, ELEV, keys, sendElev, step, doSearch, goTo, toggleSearch,
+window.__mall = {player, ELEV, keys, sendElev, step, doSearch, goTo, STORES, welcome,
   search:q=>runSearch(q).res.map(r=>r.it.n+' $'+r.it.p+' ('+r.st.name+', '+r.sc+')'),
   render:()=>{ updateSearchFx(t); renderer.render(scene,camera); drawMap(); updateWhere(); updateAction(); }};
 document.getElementById('loading').hidden = true;
